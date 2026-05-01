@@ -219,6 +219,15 @@
       cursor: pointer;
     }
 
+    .sale-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #ff9800;
+      color: white;
+      cursor: pointer;
+    }
+
     .danger-btn {
       padding: 6px 12px;
       border: none;
@@ -232,8 +241,8 @@
       padding: 6px 12px;
       border: none;
       border-radius: 4px;
-      background: #e9ecef;
-      color: #333;
+      background: #6c757d;
+      color: white;
       cursor: pointer;
     }
 
@@ -244,7 +253,8 @@
       border: 1px solid #ccc;
     }
 
-    #dateFilter {
+    #dateFilter,
+    #saleDateFilter {
       padding: 5px;
       border-radius: 4px;
       border: 1px solid #ccc;
@@ -289,14 +299,12 @@
 </head>
 
 <body>
-  <!-- UI Blocker + Spinner -->
   <div id="uiBlocker"></div>
 
   <div id="globalSpinner">
     <i class="bi bi-arrow-repeat spin"></i>
   </div>
 
-  <!-- Logout Menu -->
   <div id="logoutMenu">
     <div id="dashboardBtn" class="menu-item" onclick="goDashboard()">
       Dashboard
@@ -311,7 +319,6 @@
     </div>
   </div>
 
-  <!-- Header -->
   <div class="top-header">
     <div
       class="profile-display"
@@ -332,7 +339,6 @@
     </button>
   </div>
 
-  <!-- Confirm Modal -->
   <div id="confirmModal">
     <div class="modal-box">
       <p id="modalText"></p>
@@ -347,7 +353,7 @@
     </div>
   </div>
 
-  <!-- Active Sessions -->
+  <!-- ACTIVE SESSIONS -->
   <div class="section-card">
     <h2>Active Sessions</h2>
 
@@ -361,7 +367,11 @@
         </tr>
       </thead>
 
-      <tbody></tbody>
+      <tbody>
+        <tr>
+          <td colspan="4">Loading...</td>
+        </tr>
+      </tbody>
     </table>
 
     <div class="actions-row">
@@ -373,14 +383,14 @@
     </div>
   </div>
 
-  <!-- Performance -->
+  <!-- PERFORMANCE -->
   <div class="section-card">
     <h2>Performance</h2>
 
     <label>
       Select:
       <select id="dateFilter">
-        <option>Loading...</option>
+        <option value="ALL">Loading...</option>
       </select>
     </label>
 
@@ -392,7 +402,11 @@
         </tr>
       </thead>
 
-      <tbody></tbody>
+      <tbody>
+        <tr>
+          <td colspan="2">Press REFRESH to load data</td>
+        </tr>
+      </tbody>
     </table>
 
     <div class="actions-row">
@@ -404,6 +418,47 @@
 
       <button id="refreshUsernamesBtn" class="success-btn">
         REFRESH
+      </button>
+
+      <button id="clearUsernamesBtn" class="grey-btn">
+        CLEAR
+      </button>
+    </div>
+  </div>
+
+  <!-- SALE -->
+  <div class="section-card" style="margin-bottom:70px;">
+    <h2>Sale</h2>
+
+    <label>
+      Select:
+      <select id="saleDateFilter">
+        <option value="ALL">Loading...</option>
+      </select>
+    </label>
+
+    <table id="saleTable">
+      <thead>
+        <tr>
+          <th>Crew</th>
+          <th>Total Sale</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td colspan="2">Press REFRESH to load data</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="actions-row">
+      <button id="refreshSaleBtn" class="sale-btn">
+        REFRESH
+      </button>
+
+      <button id="clearSaleBtn" class="grey-btn">
+        CLEAR
       </button>
     </div>
   </div>
@@ -522,6 +577,26 @@
       return true;
     }
 
+    function startBtnLoading(btn) {
+      if (!btn) return;
+
+      const width = btn.offsetWidth;
+
+      btn.style.width = width + "px";
+      btn.dataset.loading = "true";
+      btn.disabled = true;
+      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+    }
+
+    function stopBtnLoading(btn, originalText) {
+      if (!btn) return;
+
+      btn.disabled = false;
+      btn.dataset.loading = "";
+      btn.innerHTML = originalText;
+      btn.style.width = "";
+    }
+
     function renderSessions(data) {
       const tbody = document.querySelector("#sessionTable tbody");
 
@@ -560,7 +635,7 @@
               class="terminateBtn"
               onclick="terminateSession('${username.replace(/'/g, "\\'")}')"
             >
-              ✖
+              <i class="bi bi-x-lg"></i>
             </button>
           </td>
         `;
@@ -576,8 +651,6 @@
 
     async function loadSessions() {
       try {
-        showLoader();
-
         const data = await apiJson("/sessions");
 
         renderSessions(data);
@@ -585,9 +658,6 @@
       } catch (err) {
         console.error(err);
         alert("Failed to load sessions.");
-
-      } finally {
-        hideLoader();
       }
     }
 
@@ -603,14 +673,22 @@
       btnYes.onclick = null;
       btnNo.onclick = null;
 
+      btnNo.onclick = function () {
+        modal.style.display = "none";
+      };
+
       btnYes.onclick = async function () {
+        btnYes.disabled = true;
+        btnNo.disabled = true;
+
+        modalText.innerHTML = `
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div class="loader" style="width:25px;height:25px;border-width:3px;"></div>
+            <div>Terminating session...</div>
+          </div>
+        `;
+
         try {
-          btnYes.disabled = true;
-          btnNo.disabled = true;
-
-          btnYes.innerHTML =
-            '<div class="loader" style="width:18px;height:18px;border-width:3px;"></div>';
-
           const response = await apiJson("/terminate", {
             method: "POST",
             body: JSON.stringify({ username })
@@ -626,7 +704,7 @@
 
         } catch (err) {
           console.error(err);
-          alert("Failed to terminate session.");
+          modalText.innerText = "Error terminating session.";
 
         } finally {
           btnYes.disabled = false;
@@ -634,43 +712,59 @@
           btnYes.textContent = "Yes";
         }
       };
-
-      btnNo.onclick = function () {
-        modal.style.display = "none";
-      };
     }
 
     async function loadDates() {
-      const select = document.getElementById("dateFilter");
+      const performanceSelect = document.getElementById("dateFilter");
+      const saleSelect = document.getElementById("saleDateFilter");
 
       try {
-        const dates = await apiJson("/dates?mode=performance");
+        const performanceDates = await apiJson("/dates?mode=performance");
 
-        select.innerHTML = "";
+        performanceSelect.innerHTML = "";
 
-        if (!dates || dates.length === 0) {
-          select.innerHTML = '<option value="ALL">ALL</option>';
-          return;
+        if (!performanceDates || performanceDates.length === 0) {
+          performanceSelect.innerHTML = '<option value="ALL">ALL</option>';
+        } else {
+          if (performanceDates.length > 1) {
+            performanceSelect.innerHTML += '<option value="ALL">ALL</option>';
+          }
+
+          performanceDates.forEach(date => {
+            performanceSelect.innerHTML += `<option value="${date}">${date}</option>`;
+          });
         }
-
-        if (dates.length > 1) {
-          select.innerHTML += '<option value="ALL">ALL</option>';
-        }
-
-        dates.forEach(date => {
-          select.innerHTML += `<option value="${date}">${date}</option>`;
-        });
 
       } catch (err) {
-        console.error(err);
-        select.innerHTML = '<option value="ALL">ALL</option>';
+        console.error("Performance dates error:", err);
+        performanceSelect.innerHTML = '<option value="ALL">ALL</option>';
+      }
+
+      try {
+        const saleDates = await apiJson("/dates?mode=sale");
+
+        saleSelect.innerHTML = "";
+
+        if (!saleDates || saleDates.length === 0) {
+          saleSelect.innerHTML = '<option value="ALL">ALL</option>';
+        } else {
+          if (saleDates.length > 1) {
+            saleSelect.innerHTML += '<option value="ALL">ALL</option>';
+          }
+
+          saleDates.forEach(date => {
+            saleSelect.innerHTML += `<option value="${date}">${date}</option>`;
+          });
+        }
+
+      } catch (err) {
+        console.error("Sale dates error:", err);
+        saleSelect.innerHTML = '<option value="ALL">ALL</option>';
       }
     }
 
     async function loadPerformance() {
       try {
-        showLoader();
-
         const excludeStr = document.getElementById("excludeInput").value.trim();
 
         const excludeUsers = excludeStr
@@ -699,22 +793,23 @@
           return;
         }
 
-        let totalCount = 0;
+        let total = 0;
 
         data.forEach(row => {
           const username = String(row.username || "").toLowerCase();
 
           if (!excludeUsers.includes(username)) {
+            const count = Number(row.count) || 0;
             const tr = document.createElement("tr");
 
             tr.innerHTML = `
               <td>${username.toUpperCase()}</td>
-              <td>${row.count}</td>
+              <td>${count}</td>
             `;
 
             tbody.appendChild(tr);
 
-            totalCount += Number(row.count) || 0;
+            total += count;
           }
         });
 
@@ -724,18 +819,85 @@
 
         trTotal.innerHTML = `
           <td>Total</td>
-          <td>${totalCount}</td>
+          <td>${total}</td>
         `;
 
         tbody.appendChild(trTotal);
 
       } catch (err) {
-        console.error(err);
+        console.error("loadPerformance error:", err);
         alert("Failed to load performance.");
-
-      } finally {
-        hideLoader();
       }
+    }
+
+    async function loadSales() {
+      try {
+        const selectedDate =
+          document.getElementById("saleDateFilter").value || "ALL";
+
+        const data = await apiJson("/sale", {
+          method: "POST",
+          body: JSON.stringify({
+            date: selectedDate
+          })
+        });
+
+        const tbody = document.querySelector("#saleTable tbody");
+
+        tbody.innerHTML = "";
+
+        if (!data || !data.length) {
+          tbody.innerHTML = "<tr><td colspan='2'>No data</td></tr>";
+          return;
+        }
+
+        let total = 0;
+
+        data.forEach(row => {
+          const username = String(row.username || "").toUpperCase();
+          const count = Number(row.count) || 0;
+
+          const tr = document.createElement("tr");
+
+          tr.innerHTML = `
+            <td>${username}</td>
+            <td>${count}</td>
+          `;
+
+          tbody.appendChild(tr);
+
+          total += count;
+        });
+
+        const trTotal = document.createElement("tr");
+
+        trTotal.style.fontWeight = "bold";
+
+        trTotal.innerHTML = `
+          <td>Total</td>
+          <td>${total}</td>
+        `;
+
+        tbody.appendChild(trTotal);
+
+      } catch (err) {
+        console.error("loadSales error:", err);
+        alert("Failed to load sale.");
+      }
+    }
+
+    function clearPerformance() {
+      document.getElementById("dateFilter").value = "ALL";
+
+      document.querySelector("#usernameTable tbody").innerHTML =
+        "<tr><td colspan='2'>Press REFRESH to load data</td></tr>";
+    }
+
+    function clearSale() {
+      document.getElementById("saleDateFilter").value = "ALL";
+
+      document.querySelector("#saleTable tbody").innerHTML =
+        "<tr><td colspan='2'>Press REFRESH to load data</td></tr>";
     }
 
     function handleLogoutClick() {
@@ -750,6 +912,8 @@
 
     function openLogoutMenu() {
       const menu = document.getElementById("logoutMenu");
+
+      if (!menu) return;
 
       menu.style.display =
         menu.style.display === "block" ? "none" : "block";
@@ -766,12 +930,44 @@
       }
     });
 
-    function goMonitor() {
-      window.location.href = "monitor.html";
+    function goDashboard() {
+      const btn = document.getElementById("dashboardBtn");
+      const logoutBtn = document.getElementById("logoutMenuBtn");
+
+      if (btn?.dataset.loading) return;
+
+      btn.dataset.loading = "true";
+
+      [btn, logoutBtn].forEach(el => {
+        if (el) {
+          el.style.pointerEvents = "none";
+          el.style.opacity = "0.6";
+        }
+      });
+
+      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+
+      routeDashboardPage();
     }
 
-    function goDashboard() {
-      routeDashboardPage();
+    function goMonitor() {
+      const btn = document.getElementById("monitorBtn");
+      const logoutBtn = document.getElementById("logoutMenuBtn");
+
+      if (btn?.dataset.loading) return;
+
+      btn.dataset.loading = "true";
+
+      [btn, logoutBtn].forEach(el => {
+        if (el) {
+          el.style.pointerEvents = "none";
+          el.style.opacity = "0.6";
+        }
+      });
+
+      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+
+      window.location.href = "monitor.html";
     }
 
     async function logout() {
@@ -780,8 +976,7 @@
       const logoutBtn = document.getElementById("logoutBtn");
 
       if (logoutBtn) {
-        logoutBtn.innerHTML =
-          '<div class="loader" style="width:20px;height:20px;border-width:3px;"></div>';
+        logoutBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
       }
 
       const token = localStorage.getItem("sessionToken");
@@ -805,10 +1000,10 @@
 
     function logoutFromMenu() {
       const btn = document.getElementById("logoutMenuBtn");
-      const monitorBtn = document.getElementById("monitorBtn");
       const dashboardBtn = document.getElementById("dashboardBtn");
+      const monitorBtn = document.getElementById("monitorBtn");
 
-      [monitorBtn, dashboardBtn, btn].forEach(el => {
+      [dashboardBtn, monitorBtn, btn].forEach(el => {
         if (el) {
           el.style.pointerEvents = "none";
           el.style.opacity = "0.6";
@@ -816,31 +1011,80 @@
       });
 
       if (btn) {
-        btn.innerHTML =
-          '<div class="loader" style="width:20px;height:20px;border-width:3px;margin:auto;"></div>';
+        btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
       }
 
       logout();
     }
 
-    document
-      .getElementById("refreshBtn")
-      .addEventListener("click", loadSessions);
+    document.addEventListener("DOMContentLoaded", async () => {
+      showLoader();
 
-    document
-      .getElementById("refreshUsernamesBtn")
-      .addEventListener("click", loadPerformance);
-
-    document
-      .getElementById("dateFilter")
-      .addEventListener("change", loadPerformance);
-
-    window.addEventListener("DOMContentLoaded", async () => {
       if (!requireLogin()) return;
 
-      await loadDates();
-      await loadSessions();
-      await loadPerformance();
+      try {
+        await loadSessions();
+        await loadDates();
+
+        // IMPORTANT:
+        // Performance dan Sale TIDAK auto-load di sini.
+        // Hanya load bila tekan REFRESH button masing-masing.
+
+      } finally {
+        hideLoader();
+      }
+
+      document.getElementById("refreshBtn")?.addEventListener("click", async function () {
+        const btn = this;
+
+        if (btn.dataset.loading) return;
+
+        const originalText = btn.innerText;
+
+        startBtnLoading(btn);
+
+        try {
+          await loadSessions();
+        } finally {
+          stopBtnLoading(btn, originalText);
+        }
+      });
+
+      document.getElementById("refreshUsernamesBtn")?.addEventListener("click", async function () {
+        const btn = this;
+
+        if (btn.dataset.loading) return;
+
+        const originalText = btn.innerText;
+
+        startBtnLoading(btn);
+
+        try {
+          await loadPerformance();
+        } finally {
+          stopBtnLoading(btn, originalText);
+        }
+      });
+
+      document.getElementById("clearUsernamesBtn")?.addEventListener("click", clearPerformance);
+
+      document.getElementById("refreshSaleBtn")?.addEventListener("click", async function () {
+        const btn = this;
+
+        if (btn.dataset.loading) return;
+
+        const originalText = btn.innerText;
+
+        startBtnLoading(btn);
+
+        try {
+          await loadSales();
+        } finally {
+          stopBtnLoading(btn, originalText);
+        }
+      });
+
+      document.getElementById("clearSaleBtn")?.addEventListener("click", clearSale);
     });
   </script>
 </body>
