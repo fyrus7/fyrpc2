@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>FyRPC Login</title>
   <style>
     body {
@@ -138,121 +138,143 @@
 
 <script>
 // ======================================================
-// TUKAR URL INI kepada URL Cloudflare Worker awak
-// Contoh: https://fyrpc-api.username.workers.dev
-// Pastikan URL ini SAMA dengan Android APK yang working.
+// Cloudflare Worker API
+// Pastikan URL ini sama dengan Worker yang working.
+// Jangan letak slash belakang.
 // ======================================================
 const WORKER_API = "https://fyrpc2.iamfyrus.workers.dev";
+
 let isLoggingIn = false;
 
 function cleanApiBase() {
-  return WORKER_API.replace(/\/$/, "");
+  return String(WORKER_API || "").replace(/\/+$/, "");
 }
 
 function isMobileDevice() {
-  return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+
+  return (
+    /android|iphone|ipad|ipod|iemobile|opera mini|mobile/i.test(ua) ||
+    window.innerWidth <= 768 ||
+    window.matchMedia("(pointer: coarse)").matches
+  );
 }
 
-// 🚀 ON LOAD - ikut flow Android APK yang working
-window.addEventListener('DOMContentLoaded', () => {
-  const submitButton = document.getElementById('submit-btn');
+function getDashboardPage() {
+  return isMobileDevice() ? "mobile.html" : "desktop.html";
+}
+
+// 🚀 ON LOAD
+window.addEventListener("DOMContentLoaded", () => {
+  const submitButton = document.getElementById("submit-btn");
   if (!submitButton) return;
 
   submitButton.innerText = "Verifying...";
   submitButton.disabled = true;
 
-  const token = localStorage.getItem('sessionToken');
+  const token = localStorage.getItem("sessionToken");
 
   // 🔐 AUTO LOGIN / VALIDATE SESSION
   if (token) {
     fetch(`${cleanApiBase()}/validate`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: token })
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        token
+      })
     })
-    .then(res => res.text())
-    .then(res => {
-      console.log("RAW VALIDATE:", res);
+      .then(res => res.text())
+      .then(raw => {
+        console.log("RAW VALIDATE:", raw);
 
-      let response;
-      try {
-        response = JSON.parse(res);
-      } catch (e) {
+        let response;
+
+        try {
+          response = JSON.parse(raw);
+        } catch (e) {
+          submitButton.innerText = "Login";
+          submitButton.disabled = false;
+          return;
+        }
+
+        if (response.valid) {
+          loadDashboard(response.profile);
+        } else {
+          localStorage.clear();
+          submitButton.innerText = "Login";
+          submitButton.disabled = false;
+        }
+      })
+      .catch(err => {
+        console.log("VALIDATE FETCH ERROR:", err);
         submitButton.innerText = "Login";
         submitButton.disabled = false;
-        return;
-      }
+      });
 
-      if (response.valid) {
-        loadDashboard(response.profile);
-      } else {
-        localStorage.clear();
-        submitButton.innerText = "Login";
-        submitButton.disabled = false;
-      }
-    })
-    .catch(err => {
-      console.log("VALIDATE FETCH ERROR:", err);
-      submitButton.innerText = "Login";
-      submitButton.disabled = false;
-    });
   } else {
     submitButton.innerText = "Login";
     submitButton.disabled = false;
   }
 
   // 👁️ Toggle password
-  const passwordInput = document.getElementById('pwd');
-  const toggleIcon = document.getElementById('toggle-password');
-  const hidePassword = localStorage.getItem('hidePassword');
+  const passwordInput = document.getElementById("pwd");
+  const toggleIcon = document.getElementById("toggle-password");
+  const hidePassword = localStorage.getItem("hidePassword");
 
   if (passwordInput && toggleIcon) {
-    if (hidePassword === 'false') {
-      passwordInput.type = 'text';
-      toggleIcon.classList.replace('bi-eye-slash','bi-eye');
+    if (hidePassword === "false") {
+      passwordInput.type = "text";
+      toggleIcon.classList.replace("bi-eye-slash", "bi-eye");
     } else {
-      passwordInput.type = 'password';
-      toggleIcon.classList.replace('bi-eye','bi-eye-slash');
-      localStorage.setItem('hidePassword','true');
+      passwordInput.type = "password";
+      toggleIcon.classList.replace("bi-eye", "bi-eye-slash");
+      localStorage.setItem("hidePassword", "true");
     }
 
-    toggleIcon.addEventListener('click', () => {
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        toggleIcon.classList.replace('bi-eye-slash','bi-eye');
-        localStorage.setItem('hidePassword','false');
+    toggleIcon.addEventListener("click", () => {
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        toggleIcon.classList.replace("bi-eye-slash", "bi-eye");
+        localStorage.setItem("hidePassword", "false");
       } else {
-        passwordInput.type = 'password';
-        toggleIcon.classList.replace('bi-eye','bi-eye-slash');
-        localStorage.setItem('hidePassword','true');
+        passwordInput.type = "password";
+        toggleIcon.classList.replace("bi-eye", "bi-eye-slash");
+        localStorage.setItem("hidePassword", "true");
+      }
+    });
+
+    passwordInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        passwordInput.blur();
+        validateLogin();
       }
     });
   }
-
-  const pwdInput = document.getElementById('pwd');
-  pwdInput?.addEventListener('keydown', function(event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      pwdInput.blur();
-      validateLogin();
-    }
-  });
 });
 
-// 🔐 LOGIN - ikut Android APK: body wajib { password: enteredPassword }
+// 🔐 LOGIN
 function validateLogin() {
   if (isLoggingIn) return;
+
   isLoggingIn = true;
 
-  const enteredPassword = document.getElementById('pwd')?.value;
-  const submitButton = document.getElementById('submit-btn');
-  const errorMessage = document.getElementById('error-message');
+  const enteredPassword = document.getElementById("pwd")?.value || "";
+  const submitButton = document.getElementById("submit-btn");
+  const errorMessage = document.getElementById("error-message");
+
+  if (!submitButton || !errorMessage) {
+    isLoggingIn = false;
+    return;
+  }
 
   errorMessage.innerText = "";
   submitButton.innerText = "Loading...";
   submitButton.disabled = true;
 
-  if (!enteredPassword) {
+  if (!enteredPassword.trim()) {
     errorMessage.innerText = "Please enter your password.";
     submitButton.innerText = "Login";
     submitButton.disabled = false;
@@ -262,72 +284,101 @@ function validateLogin() {
 
   fetch(`${cleanApiBase()}/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       password: enteredPassword
     })
   })
-  .then(res => res.text())
-  .then(res => {
-    console.log("RAW LOGIN:", res);
+    .then(res => res.text())
+    .then(raw => {
+      console.log("RAW LOGIN:", raw);
 
-    let response;
-    try {
-      response = JSON.parse(res);
-    } catch (e) {
-      alert("SERVER ERROR:\n" + res);
+      let response;
+
+      try {
+        response = JSON.parse(raw);
+      } catch (e) {
+        alert("SERVER ERROR:\n" + raw);
+        isLoggingIn = false;
+        submitButton.innerText = "Login";
+        submitButton.disabled = false;
+        return;
+      }
+
       isLoggingIn = false;
       submitButton.innerText = "Login";
       submitButton.disabled = false;
-      return;
-    }
 
-    isLoggingIn = false;
-    submitButton.innerText = "Login";
-    submitButton.disabled = false;
+      if (response.success) {
+        localStorage.setItem("sessionToken", response.token);
+        localStorage.setItem("userProfile", response.profile);
+        localStorage.setItem("lastDashboardPage", getDashboardPage());
 
-    if (response.success) {
-      localStorage.setItem('sessionToken', response.token);
-      localStorage.setItem('userProfile', response.profile);
-      loadDashboard(response.profile);
-    } else {
-      // Kalau console RAW LOGIN = {"success":false}, biasanya web tersambung ke Worker/Sheet yang salah
-      errorMessage.innerText = response.error ? response.error : "Wrong Password";
-    }
-  })
-  .catch((err) => {
-    console.log("FETCH ERROR:", err);
-    isLoggingIn = false;
-    submitButton.innerText = "Login";
-    submitButton.disabled = false;
-    errorMessage.innerText = "No internet / CORS / wrong Worker URL";
-  });
+        loadDashboard(response.profile);
+
+      } else {
+        if (response.reason === "NO_MATCH") {
+          errorMessage.innerText = "Wrong Password";
+        } else if (response.error) {
+          errorMessage.innerText =
+            typeof response.error === "string"
+              ? response.error
+              : JSON.stringify(response.error);
+        } else {
+          errorMessage.innerText = "Wrong Password";
+        }
+      }
+    })
+    .catch(err => {
+      console.log("FETCH ERROR:", err);
+
+      isLoggingIn = false;
+      submitButton.innerText = "Login";
+      submitButton.disabled = false;
+      errorMessage.innerText = "No internet / CORS / wrong Worker URL";
+    });
 }
 
 // 📱 / 💻 REDIRECT PAGE
 function loadDashboard(profile) {
   if (!profile) return;
 
-  profile = profile.toLowerCase();
-  localStorage.setItem('userProfile', profile);
+  profile = String(profile).toLowerCase();
+  localStorage.setItem("userProfile", profile);
 
   if (["mod", "admin"].includes(profile)) {
     showMasterChoice();
-  } else {
-    goDashboard();
+    return;
   }
+
+  goDashboard();
 }
 
 function goDashboard() {
-  window.location.href = isMobileDevice() ? "mobile.html" : "desktop.html";
+  const page = getDashboardPage();
+
+  localStorage.setItem("lastDashboardPage", page);
+  window.location.href = page;
 }
 
 function goPage(page) {
+  localStorage.setItem("lastDashboardPage", page);
   window.location.href = page;
 }
 
 function showMasterChoice() {
+  const oldOverlay = document.getElementById("choiceOverlay");
+  if (oldOverlay) oldOverlay.remove();
+
+  const dashboardPage = getDashboardPage();
+  const dashboardLabel = dashboardPage === "mobile.html"
+    ? "Dashboard Mobile"
+    : "Dashboard Desktop";
+
   const modal = document.createElement("div");
+
   modal.innerHTML = `
     <div id="choiceOverlay" style="
       position:fixed;
@@ -349,7 +400,9 @@ function showMasterChoice() {
         <h3 style="margin:0; color:#6f42c1;">Choose Page</h3>
 
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:15px;">
-          <button id="goDashboard" class="choiceBtn">Dashboard</button>
+          <button id="goDashboard" class="choiceBtn">${dashboardLabel}</button>
+          <button id="goMobile" class="choiceBtn">Force Mobile</button>
+          <button id="goDesktop" class="choiceBtn">Force Desktop</button>
           <button id="goMonitor" class="choiceBtn">Monitor</button>
           <button id="goAdmin" class="choiceBtn">Admin</button>
         </div>
@@ -358,10 +411,16 @@ function showMasterChoice() {
       </div>
     </div>
   `;
+
   document.body.appendChild(modal);
 
-  function showSpinner(text) {
-    document.getElementById("choiceBox").innerHTML = `
+  ensureChoiceStyle();
+
+  function showSpinner(message) {
+    const box = document.getElementById("choiceBox");
+    if (!box) return;
+
+    box.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;">
         <div style="
           width:40px;height:40px;
@@ -371,7 +430,7 @@ function showMasterChoice() {
           animation:spin 1s linear infinite;
           margin-bottom:10px;
         "></div>
-        <span>${text}</span>
+        <span>${message}</span>
       </div>
     `;
   }
@@ -379,6 +438,16 @@ function showMasterChoice() {
   document.getElementById("goDashboard").onclick = () => {
     showSpinner("Opening Dashboard...");
     setTimeout(() => goDashboard(), 200);
+  };
+
+  document.getElementById("goMobile").onclick = () => {
+    showSpinner("Opening Mobile...");
+    setTimeout(() => goPage("mobile.html"), 200);
+  };
+
+  document.getElementById("goDesktop").onclick = () => {
+    showSpinner("Opening Desktop...");
+    setTimeout(() => goPage("desktop.html"), 200);
   };
 
   document.getElementById("goMonitor").onclick = () => {
@@ -392,11 +461,18 @@ function showMasterChoice() {
   };
 
   document.getElementById("goCancel").onclick = () => {
-    document.getElementById("choiceBox").innerHTML = "Exiting...";
+    const box = document.getElementById("choiceBox");
+    if (box) box.innerHTML = "Exiting...";
     logout();
   };
+}
+
+function ensureChoiceStyle() {
+  if (document.getElementById("choiceStyle")) return;
 
   const style = document.createElement("style");
+  style.id = "choiceStyle";
+
   style.innerHTML = `
     .choiceBtn {
       width:100%;
@@ -410,7 +486,11 @@ function showMasterChoice() {
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
       transition: all 0.2s ease;
     }
-    .choiceBtn:hover { opacity: 0.9; }
+
+    .choiceBtn:hover {
+      opacity: 0.9;
+    }
+
     .cancelBtn {
       width:100%;
       margin-top:15px;
@@ -422,27 +502,39 @@ function showMasterChoice() {
       cursor:pointer;
       transition: all 0.2s ease;
     }
-    .cancelBtn:hover { opacity: 0.9; }
+
+    .cancelBtn:hover {
+      opacity: 0.9;
+    }
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
   `;
+
   document.head.appendChild(style);
 }
 
 function logout() {
-  const token = localStorage.getItem('sessionToken');
+  const token = localStorage.getItem("sessionToken");
 
   fetch(`${cleanApiBase()}/logout`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token: token })
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      token
+    })
   })
-  .finally(() => {
-    localStorage.clear();
-    window.location.replace("login.html");
-  });
+    .catch(err => {
+      console.log("LOGOUT ERROR:", err);
+    })
+    .finally(() => {
+      localStorage.clear();
+      window.location.replace("login.html");
+    });
 }
 </script>
 </body>
