@@ -3,13 +3,13 @@
 // WAJIB TUKAR: letak URL Worker awak di sini.
 // Contoh: https://fyrpc-api.username.workers.dev
 // ================================================================
-const API_BASE = "https://fyrpc2.iamfyrus.workers.dev/";
+const WORKER_API = "https://fyrpc2.iamfyrus.workers.dev";
 let firstSearchDone = false;
 let enablePrint = false;
 let scanTimer;
 
 function apiUrl(path) {
-  return API_BASE.replace(/\/$/, "") + path;
+  return WORKER_API.replace(/\/$/, "") + path;
 }
 
 async function apiJson(path, options = {}) {
