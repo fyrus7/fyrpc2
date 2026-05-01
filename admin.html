@@ -94,11 +94,22 @@
     }
 
     .spin {
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      font-size: 40px;
-      color: white;
-    }
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+/* Spinner besar untuk global loader sahaja */
+#globalSpinner .spin {
+  font-size: 40px;
+  color: white;
+}
+
+/* Spinner kecil dalam button */
+.btn-spin {
+  font-size: 16px;
+  color: white;
+  line-height: 1;
+}
 
     @keyframes spin {
       100% {
@@ -577,25 +588,32 @@
       return true;
     }
 
-    function startBtnLoading(btn) {
-      if (!btn) return;
+function startBtnLoading(btn) {
+  if (!btn) return;
 
-      const width = btn.offsetWidth;
+  const width = btn.offsetWidth;
+  const height = btn.offsetHeight;
 
-      btn.style.width = width + "px";
-      btn.dataset.loading = "true";
-      btn.disabled = true;
-      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
-    }
+  btn.style.width = width + "px";
+  btn.style.height = height + "px";
 
-    function stopBtnLoading(btn, originalText) {
-      if (!btn) return;
+  btn.dataset.loading = "true";
+  btn.disabled = true;
 
-      btn.disabled = false;
-      btn.dataset.loading = "";
-      btn.innerHTML = originalText;
-      btn.style.width = "";
-    }
+  btn.innerHTML = '<i class="bi bi-arrow-repeat spin btn-spin"></i>';
+}
+
+function stopBtnLoading(btn, originalText) {
+  if (!btn) return;
+
+  btn.disabled = false;
+  btn.dataset.loading = "";
+
+  btn.innerHTML = originalText;
+
+  btn.style.width = "";
+  btn.style.height = "";
+}
 
     function renderSessions(data) {
       const tbody = document.querySelector("#sessionTable tbody");
