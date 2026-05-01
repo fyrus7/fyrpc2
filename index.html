@@ -65,33 +65,55 @@
     align-items: center;
   }
 
-  .pin-wrapper {
-    position: relative;
-    width: 220px;
-    max-width: 100%;
-    margin-bottom: 12px;
-  }
+.pin-wrapper {
+  position: relative;
+  width: 220px;
+  max-width: 100%;
+  margin: 0 auto 12px auto;
+}
 
-  .input-box {
-    width: 100%;
-    padding: 10px 40px 10px 15px;
+.input-box {
+  width: 100%;
+  height: 42px;
 
-    font-size: 15px;
-    border-radius: 20px;
+  padding: 10px 42px 10px 42px; /* kiri kanan sama */
+  font-size: 15px;
 
-    background: rgba(255, 255, 255, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255,255,255,0.4);
 
-    text-align: center;
-    outline: none;
+  text-align: center;
+  outline: none;
 
-    transition: all 0.2s ease;
-  }
+  transition: all 0.2s ease;
+}
 
-  .input-box:focus {
-    border-color: #e83e8c;
-    box-shadow: 0 0 10px rgba(232, 62, 140, 0.3);
-  }
+.input-box:focus {
+  border-color: #e83e8c;
+  box-shadow: 0 0 10px rgba(232,62,140,0.3);
+}
+
+#toggle-password {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  font-size: 18px;
+  color: #6f42c1;
+  text-shadow: 0 0 1px #455A64;
+}
 
   .submit-button {
     width: 130px;
@@ -115,18 +137,6 @@
     opacity: 0.9;
   }
 
-  #toggle-password {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    cursor: pointer;
-    font-size: 18px;
-    color: #6f42c1;
-    text-shadow: 0 0 1px #455A64;
-  }
 
   .login-info-box {
     margin-top: 15px;
@@ -173,12 +183,24 @@
     <br><br>
 
     <form id="login-form" onsubmit="event.preventDefault(); validateLogin();">
-      <div class="pin-wrapper">
-        <input type="tel" id="pwd" name="password" class="input-box" placeholder="Enter PIN" pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"><br><br>
-        <span id="toggle-password" class="bi bi-eye-slash"></span>
-      </div>
+<div class="pin-wrapper">
+  <input
+    type="tel"
+    id="pwd"
+    name="password"
+    class="input-box"
+    placeholder="Enter PIN"
+    pattern="[0-9]*"
+    inputmode="numeric"
+    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+  >
 
-      <button type="submit" id="submit-btn" class="submit-button">Login</button>
+  <span id="toggle-password" class="bi bi-eye-slash"></span>
+</div>
+
+<button type="submit" id="submit-btn" class="submit-button">
+  Login
+</button>
       <div id="error-message" style="color:red; font-weight:bold; margin-top:10px; font-size:18px;"></div>
     </form>
 
