@@ -635,105 +635,6 @@ body.dark-mode .dark-toggle-btn i {
 }
 
 
-/* ============================= */
-/* DARK MODE PATCH TAMBAHAN      */
-/* ============================= */
-
-body.dark-mode div[style*="background-color: lightgrey"] {
-  background-color: #1c1c1c !important;
-}
-
-body.dark-mode .collect-box {
-  background-color: #2a2b2e !important;
-  color: #e4e6eb;
-  border-color: #444;
-}
-
-body.dark-mode div[style*="background-color: lightgrey"] .profile-display,
-body.dark-mode div[style*="background-color: lightgrey"] #logoutBtn,
-body.dark-mode div[style*="background-color: lightgrey"] i {
-  color: #e4e6eb !important;
-}
-/* Keep status-box color original */
-body.dark-mode .status-box,
-body.dark-mode .walkin-box {
-  color: #455A64; /* teks tetap asal */
-  background-color: white; /* kekalkan white */
-  border: 1px solid #455A64;
-}
-
-/* Dark mode */
-body.dark-mode .collect-box input[type="text"],
-body.dark-mode .collect-box input[type="tel"] {
-  background: #3a3b3c;
-  color: #e4e6eb;
-  border: 1px solid rgba(200,200,200,0.3);
-}
-
-/* Panel kiri & kanan */
-body.dark-mode .left-panel {
-  background-color: #2a2b2e !important;
-  color: #e4e6eb;
-}
-body.dark-mode .right-panel {
-  background-color: #202123 !important;
-  color: #e4e6eb;
-}
-
-/* Search box & butang cari */
-body.dark-mode .search-box {
-  background-color: #343538;
-  color: #e4e6eb;
-  border: 1px solid #555;
-}
-body.dark-mode .search-box::placeholder {
-  color: #aaa;
-}
-body.dark-mode #searchButton {
-  background-color: #455A64 !important; /* kekalkan warna asal */
-  color: #fff !important;
-}
-body.dark-mode #searchButton:hover {
-  background-color: #1C313A !important;
-}
-
-/* Clear button */
-body.dark-mode .icon-clear-button2 {
-  background-color: #455A64 !important;
-  color: #fff !important;
-}
-body.dark-mode .icon-clear-button2:hover {
-  background-color: #1C313A !important;
-}
-
-/* Counter text */
-body.dark-mode .counter {
-  color: #e4e6eb;
-}
-
-/* Result container & box */
-body.dark-mode .result-container {
-  background-color: transparent; /* biar ikut parent */
-  color: #e4e6eb;
-}
-
-
-/* Dropdown select */
-body.dark-mode .dropdown-container select {
-  background-color: #343538 !important;
-  color: #e4e6eb !important;
-  border: 1px solid #555 !important;
-}
-
-/* Show collected button */
-body.dark-mode .showCollectedbutton {
-  background-color: #455A64 !important;
-  color: #fff !important;
-}
-body.dark-mode .showCollectedbutton:hover {
-  background-color: #1C313A !important;
-}
-
 .view-toggle {
   display: flex;
   justify-content: center;
@@ -877,7 +778,46 @@ body.dark-mode .showCollectedbutton:hover {
     }
 
 
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
 
+  align-items: center;   /* 🔥 center semua card */
+}
+
+.card-item {
+  width: 85%;            /* 🔥 kecilkan lebar */
+  max-width: 280px;      /* 🔥 limit supaya tak besar sangat */
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card-item .label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.card-item .value {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.card-item.collected {
+  background: #eaf7ee;
+  color: #28a745;
+}
+
+.card-item.uncollected {
+  background: #fff3cd;
+  color: #856404;
+}
 </style>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
