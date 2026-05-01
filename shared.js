@@ -189,6 +189,7 @@ function clearSearch() {
   }
   hideLoader();
   firstSearchDone = false;
+  loadSummaryCard();
 }
 
 function getCollectByText(a, b) {
@@ -802,6 +803,7 @@ async function validateProtectedPage() {
 
 // Override Apps Script page onload before it fires.
 window.onload = null;
+loadSummaryCard();
 window.addEventListener("load", validateProtectedPage);
 
 window.addEventListener("storage", function(e) {
@@ -856,3 +858,34 @@ document.addEventListener("keydown", function(e) {
     }, 300);
   }
 });
+
+function loadSummaryCard() {
+
+ fetch(`${WORKER_API}/summary`)
+  .then(r=>r.json())
+  .then(data=>{
+
+    document.getElementById('result').innerHTML = `
+      <div class="summary-card">
+
+        <div class="card-item">
+          <div class="label">TOTAL PARTICIPANT</div>
+          <div class="value">${data.total}</div>
+        </div>
+
+        <div class="card-item collected">
+          <div class="label">COLLECTED</div>
+          <div class="value">${data.collected}</div>
+        </div>
+
+        <div class="card-item uncollected">
+          <div class="label">BALANCE</div>
+          <div class="value">${data.balance}</div>
+        </div>
+
+      </div>
+    `
+
+  })
+
+}
