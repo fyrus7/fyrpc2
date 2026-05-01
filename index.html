@@ -137,158 +137,313 @@
   </div>
 
 <script>
-// ================================
+// ======================================================
 // TUKAR URL INI kepada URL Cloudflare Worker awak
-// contoh: https://fyrpc-api.username.workers.dev
-// ================================
-const API_BASE = "https://fyrpc2.iamfyrus.workers.dev";
+// Contoh: https://fyrpc-api.username.workers.dev
+// Pastikan URL ini SAMA dengan Android APK yang working.
+// ======================================================
+const WORKER_API = "https://fyrpc2.iamfyrus.workers.dev";
 let isLoggingIn = false;
 
-function apiUrl(path) {
-  return API_BASE.replace(/\/$/, "") + path;
-}
-
-async function postJson(path, data) {
-  const res = await fetch(apiUrl(path), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data || {})
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+function cleanApiBase() {
+  return WORKER_API.replace(/\/$/, "");
 }
 
 function isMobileDevice() {
   return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth <= 768;
 }
 
-function routeDashboardPage() {
-  window.location.href = isMobileDevice() ? "mobile.html" : "desktop.html";
-}
-
-function loadDashboard(profile) {
-  if (!profile) return;
-  profile = String(profile).toLowerCase();
-  localStorage.setItem("userProfile", profile);
-
-  if (["mod", "admin"].includes(profile)) {
-    showModeratorChoice();
-  } else {
-    routeDashboardPage();
-  }
-}
-
-function routeModerator(mode) {
-  if (mode === "dashboard") return routeDashboardPage();
-  if (mode === "monitor") return window.location.href = "monitor.html";
-  if (mode === "admin") return window.location.href = "admin.html";
-}
-
-function showModeratorChoice() {
-  const modal = document.createElement("div");
-  modal.innerHTML = `
-    <div id="choiceOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:9999;">
-      <div id="choiceBox" style="background:rgba(255,255,255,0.95); padding:20px; border-radius:16px; box-shadow:0 15px 40px rgba(0,0,0,0.25); text-align:center; width:280px;">
-        <h3 style="margin:0; color:#6f42c1;">Choose Page</h3>
-        <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
-          <button class="submit-button" style="width:100%;" onclick="routeModerator('dashboard')">Dashboard</button>
-          <button class="submit-button" style="width:100%;" onclick="routeModerator('monitor')">Monitor</button>
-          <button class="submit-button" style="width:100%;" onclick="routeModerator('admin')">Admin</button>
-        </div>
-        <button class="submit-button" style="width:100%; background:#aaa; margin-top:12px;" onclick="document.getElementById('choiceOverlay').remove()">Cancel</button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-}
-
-async function validateLogin() {
-  if (isLoggingIn) return;
-  isLoggingIn = true;
-
-  const enteredPassword = document.getElementById("pwd")?.value.trim();
-  const submitButton = document.getElementById("submit-btn");
-  const errorMessage = document.getElementById("error-message");
-  errorMessage.innerText = "";
-
-  if (!enteredPassword) {
-    errorMessage.innerText = "Please enter your password.";
-    isLoggingIn = false;
-    return;
-  }
-
-  submitButton.innerText = "Loading...";
-  submitButton.disabled = true;
-
-  try {
-    const response = await postJson("/login", { password: enteredPassword });
-    if (response.success) {
-      localStorage.setItem("sessionToken", response.token);
-      localStorage.setItem("userProfile", response.profile);
-      loadDashboard(response.profile);
-    } else {
-      errorMessage.innerText = "Wrong Password";
-    }
-  } catch (err) {
-    console.error(err);
-    errorMessage.innerText = "Server error. Check API_BASE / Worker CORS.";
-  } finally {
-    isLoggingIn = false;
-    submitButton.innerText = "Login";
-    submitButton.disabled = false;
-  }
-}
-
-window.addEventListener("DOMContentLoaded", async () => {
-  const submitButton = document.getElementById("submit-btn");
-  const token = localStorage.getItem("sessionToken");
+// 🚀 ON LOAD - ikut flow Android APK yang working
+window.addEventListener('DOMContentLoaded', () => {
+  const submitButton = document.getElementById('submit-btn');
+  if (!submitButton) return;
 
   submitButton.innerText = "Verifying...";
   submitButton.disabled = true;
 
+  const token = localStorage.getItem('sessionToken');
+
+  // 🔐 AUTO LOGIN / VALIDATE SESSION
   if (token) {
-    try {
-      const response = await postJson("/validate", { token });
-      if (response.valid) {
-        loadDashboard(response.profile);
+    fetch(`${cleanApiBase()}/validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: token })
+    })
+    .then(res => res.text())
+    .then(res => {
+      console.log("RAW VALIDATE:", res);
+
+      let response;
+      try {
+        response = JSON.parse(res);
+      } catch (e) {
+        submitButton.innerText = "Login";
+        submitButton.disabled = false;
         return;
       }
-      localStorage.removeItem("sessionToken");
-      localStorage.removeItem("userProfile");
-    } catch (err) {
-      console.error(err);
-      localStorage.removeItem("sessionToken");
-      localStorage.removeItem("userProfile");
-    }
-  }
 
-  submitButton.innerText = "Login";
-  submitButton.disabled = false;
-
-  const passwordInput = document.getElementById("pwd");
-  const toggleIcon = document.getElementById("toggle-password");
-  const hidePassword = localStorage.getItem("hidePassword");
-
-  if (hidePassword === "false") {
-    passwordInput.type = "text";
-    toggleIcon.classList.replace("bi-eye-slash", "bi-eye");
+      if (response.valid) {
+        loadDashboard(response.profile);
+      } else {
+        localStorage.clear();
+        submitButton.innerText = "Login";
+        submitButton.disabled = false;
+      }
+    })
+    .catch(err => {
+      console.log("VALIDATE FETCH ERROR:", err);
+      submitButton.innerText = "Login";
+      submitButton.disabled = false;
+    });
   } else {
-    passwordInput.type = "password";
-    toggleIcon.classList.replace("bi-eye", "bi-eye-slash");
-    localStorage.setItem("hidePassword", "true");
+    submitButton.innerText = "Login";
+    submitButton.disabled = false;
   }
 
-  toggleIcon.addEventListener("click", () => {
-    if (passwordInput.type === "password") {
-      passwordInput.type = "text";
-      toggleIcon.classList.replace("bi-eye-slash", "bi-eye");
-      localStorage.setItem("hidePassword", "false");
+  // 👁️ Toggle password
+  const passwordInput = document.getElementById('pwd');
+  const toggleIcon = document.getElementById('toggle-password');
+  const hidePassword = localStorage.getItem('hidePassword');
+
+  if (passwordInput && toggleIcon) {
+    if (hidePassword === 'false') {
+      passwordInput.type = 'text';
+      toggleIcon.classList.replace('bi-eye-slash','bi-eye');
     } else {
-      passwordInput.type = "password";
-      toggleIcon.classList.replace("bi-eye", "bi-eye-slash");
-      localStorage.setItem("hidePassword", "true");
+      passwordInput.type = 'password';
+      toggleIcon.classList.replace('bi-eye','bi-eye-slash');
+      localStorage.setItem('hidePassword','true');
+    }
+
+    toggleIcon.addEventListener('click', () => {
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.replace('bi-eye-slash','bi-eye');
+        localStorage.setItem('hidePassword','false');
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.replace('bi-eye','bi-eye-slash');
+        localStorage.setItem('hidePassword','true');
+      }
+    });
+  }
+
+  const pwdInput = document.getElementById('pwd');
+  pwdInput?.addEventListener('keydown', function(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      pwdInput.blur();
+      validateLogin();
     }
   });
 });
+
+// 🔐 LOGIN - ikut Android APK: body wajib { password: enteredPassword }
+function validateLogin() {
+  if (isLoggingIn) return;
+  isLoggingIn = true;
+
+  const enteredPassword = document.getElementById('pwd')?.value;
+  const submitButton = document.getElementById('submit-btn');
+  const errorMessage = document.getElementById('error-message');
+
+  errorMessage.innerText = "";
+  submitButton.innerText = "Loading...";
+  submitButton.disabled = true;
+
+  if (!enteredPassword) {
+    errorMessage.innerText = "Please enter your password.";
+    submitButton.innerText = "Login";
+    submitButton.disabled = false;
+    isLoggingIn = false;
+    return;
+  }
+
+  fetch(`${cleanApiBase()}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      password: enteredPassword
+    })
+  })
+  .then(res => res.text())
+  .then(res => {
+    console.log("RAW LOGIN:", res);
+
+    let response;
+    try {
+      response = JSON.parse(res);
+    } catch (e) {
+      alert("SERVER ERROR:\n" + res);
+      isLoggingIn = false;
+      submitButton.innerText = "Login";
+      submitButton.disabled = false;
+      return;
+    }
+
+    isLoggingIn = false;
+    submitButton.innerText = "Login";
+    submitButton.disabled = false;
+
+    if (response.success) {
+      localStorage.setItem('sessionToken', response.token);
+      localStorage.setItem('userProfile', response.profile);
+      loadDashboard(response.profile);
+    } else {
+      // Kalau console RAW LOGIN = {"success":false}, biasanya web tersambung ke Worker/Sheet yang salah
+      errorMessage.innerText = response.error ? response.error : "Wrong Password";
+    }
+  })
+  .catch((err) => {
+    console.log("FETCH ERROR:", err);
+    isLoggingIn = false;
+    submitButton.innerText = "Login";
+    submitButton.disabled = false;
+    errorMessage.innerText = "No internet / CORS / wrong Worker URL";
+  });
+}
+
+// 📱 / 💻 REDIRECT PAGE
+function loadDashboard(profile) {
+  if (!profile) return;
+
+  profile = profile.toLowerCase();
+  localStorage.setItem('userProfile', profile);
+
+  if (["mod", "admin"].includes(profile)) {
+    showMasterChoice();
+  } else {
+    goDashboard();
+  }
+}
+
+function goDashboard() {
+  window.location.href = isMobileDevice() ? "mobile.html" : "desktop.html";
+}
+
+function goPage(page) {
+  window.location.href = page;
+}
+
+function showMasterChoice() {
+  const modal = document.createElement("div");
+  modal.innerHTML = `
+    <div id="choiceOverlay" style="
+      position:fixed;
+      top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.6);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+    ">
+      <div id="choiceBox" style="
+        background: rgba(255,255,255,0.95);
+        padding:20px;
+        border-radius:16px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        text-align:center;
+        width:280px;
+      ">
+        <h3 style="margin:0; color:#6f42c1;">Choose Page</h3>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:15px;">
+          <button id="goDashboard" class="choiceBtn">Dashboard</button>
+          <button id="goMonitor" class="choiceBtn">Monitor</button>
+          <button id="goAdmin" class="choiceBtn">Admin</button>
+        </div>
+
+        <button id="goCancel" class="cancelBtn">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  function showSpinner(text) {
+    document.getElementById("choiceBox").innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="
+          width:40px;height:40px;
+          border:4px solid #ddd;
+          border-top:4px solid #333;
+          border-radius:50%;
+          animation:spin 1s linear infinite;
+          margin-bottom:10px;
+        "></div>
+        <span>${text}</span>
+      </div>
+    `;
+  }
+
+  document.getElementById("goDashboard").onclick = () => {
+    showSpinner("Opening Dashboard...");
+    setTimeout(() => goDashboard(), 200);
+  };
+
+  document.getElementById("goMonitor").onclick = () => {
+    showSpinner("Opening Monitor...");
+    setTimeout(() => goPage("monitor.html"), 200);
+  };
+
+  document.getElementById("goAdmin").onclick = () => {
+    showSpinner("Opening Admin...");
+    setTimeout(() => goPage("admin.html"), 200);
+  };
+
+  document.getElementById("goCancel").onclick = () => {
+    document.getElementById("choiceBox").innerHTML = "Exiting...";
+    logout();
+  };
+
+  const style = document.createElement("style");
+  style.innerHTML = `
+    .choiceBtn {
+      width:100%;
+      padding:12px;
+      font-size:15px;
+      border:none;
+      border-radius:20px;
+      background: linear-gradient(135deg, #6f42c1, #e83e8c);
+      color:#fff;
+      cursor:pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: all 0.2s ease;
+    }
+    .choiceBtn:hover { opacity: 0.9; }
+    .cancelBtn {
+      width:100%;
+      margin-top:15px;
+      padding:10px;
+      border:none;
+      border-radius:20px;
+      background:#f1f3f5;
+      color:#555;
+      cursor:pointer;
+      transition: all 0.2s ease;
+    }
+    .cancelBtn:hover { opacity: 0.9; }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function logout() {
+  const token = localStorage.getItem('sessionToken');
+
+  fetch(`${cleanApiBase()}/logout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: token })
+  })
+  .finally(() => {
+    localStorage.clear();
+    window.location.replace("login.html");
+  });
+}
 </script>
 </body>
 </html>
