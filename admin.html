@@ -1,31 +1,847 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FyRPC Admin</title>
-<style>
-body{font-family:Arial,sans-serif;background:#eef2f5;margin:0;padding:20px}.bar{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 3px 12px rgba(0,0,0,.08);margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}.card{background:#fff;border-radius:12px;padding:15px;box-shadow:0 3px 12px rgba(0,0,0,.08)}button,select{border:0;border-radius:8px;padding:8px 12px;cursor:pointer;background:#455A64;color:#fff}select{background:#fff;color:#111;border:1px solid #ccc}.danger{background:#d32f2f}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}th{background:#f7f7f7}
-</style>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>FyRPC Admin</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      padding: 10px;
+      background: #f7f8fa;
+      color: #222;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 10px;
+      background: #fff;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f2f2f2;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed !important;
+    }
+
+    button.terminateBtn {
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    button.terminateBtn:hover {
+      background-color: #c12e2a;
+    }
+
+    .top-header {
+      background: linear-gradient(135deg, #6f42c1, #e83e8c);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 34px;
+      padding: 0 12px;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+    }
+
+    .top-header #profileNameDisplay,
+    #profileNameDisplay,
+    #logoutBtn {
+      color: white !important;
+    }
+
+    .top-header #profileNameDisplay {
+      font-size: 14px;
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      font-size: 40px;
+      color: white;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    #globalSpinner {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10001;
+      justify-content: center;
+      align-items: center;
+      pointer-events: all;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    #globalSpinner i {
+      font-size: 50px;
+    }
+
+    #uiBlocker {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: transparent;
+    }
+
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #0d6efd;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 0.8s linear infinite;
+      margin: auto;
+    }
+
+    #logoutMenu {
+      display: none;
+      position: fixed;
+      top: 48px;
+      right: 10px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      min-width: 180px;
+      overflow: hidden;
+    }
+
+    #logoutMenu div:hover {
+      background: #f5f5f5;
+    }
+
+    .menu-item {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .menu-item.logout {
+      color: red;
+    }
+
+    .section-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 16px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .section-card h2 {
+      margin-top: 0;
+    }
+
+    #confirmModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10002;
+    }
+
+    #confirmModal .modal-box {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      min-width: 300px;
+      text-align: center;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+    }
+
+    .primary-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    .success-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+
+    .danger-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #d9534f;
+      color: white;
+      cursor: pointer;
+    }
+
+    .grey-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #e9ecef;
+      color: #333;
+      cursor: pointer;
+    }
+
+    #excludeInput {
+      flex: 1;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    #dateFilter {
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .actions-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    #sessionSummary {
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 8px;
+      }
+
+      th,
+      td {
+        padding: 7px;
+        font-size: 13px;
+      }
+
+      .section-card {
+        padding: 10px;
+      }
+
+      .top-header {
+        height: 36px;
+      }
+
+      #excludeInput {
+        min-width: 100%;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<div class="bar"><b>Admin</b><div><button onclick="location.href='desktop.html'">Dashboard</button> <button class="danger" onclick="logout()">Logout</button></div></div>
-<div style="display:none"><span id="userProfile"></span></div>
-<div class="grid">
-  <div class="card"><h3>Sessions</h3><div id="sessions">Loading...</div></div>
-  <div class="card"><h3>Performance</h3><select id="perfDate"></select> <button onclick="loadPerformance()">Load</button><div id="performance"></div></div>
-  <div class="card"><h3>Walk-in Sale</h3><select id="saleDate"></select> <button onclick="loadSale()">Load</button><div id="sale"></div></div>
-</div>
-<script src="shared.js"></script>
-<script>
-function table(rows, headers=['Username','Count']){return `<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
-async function loadDates(mode,id){const dates=await apiJson('/dates?mode='+mode); const el=document.getElementById(id); el.innerHTML='<option value="ALL">ALL</option>'+dates.map(d=>`<option value="${d}">${d}</option>`).join('')}
-async function loadSessions(){const data=await apiJson('/sessions'); document.getElementById('sessions').innerHTML='<table><tr><th>User</th><th>Duration</th><th>Status</th><th>Action</th></tr>'+data.map(s=>`<tr><td>${s.username}</td><td>${s.duration}</td><td>${s.expired?'Expired':'Active'}</td><td><button class="danger" onclick="terminateUser('${s.username}')">Terminate</button></td></tr>`).join('')+'</table>'}
-async function terminateUser(username){if(!confirm('Terminate '+username+'?'))return; await apiJson('/terminate',{method:'POST',body:JSON.stringify({username})}); loadSessions();}
-async function loadPerformance(){const date=document.getElementById('perfDate').value||'ALL'; const data=await apiJson('/performance',{method:'POST',body:JSON.stringify({date})}); document.getElementById('performance').innerHTML=table(data)}
-async function loadSale(){const date=document.getElementById('saleDate').value||'ALL'; const data=await apiJson('/sale',{method:'POST',body:JSON.stringify({date})}); document.getElementById('sale').innerHTML=table(data)}
-async function initAdmin(){await loadSessions(); await loadDates('performance','perfDate'); await loadDates('sale','saleDate'); await loadPerformance(); await loadSale();}
-window.addEventListener('load',initAdmin);
-</script>
+  <!-- UI Blocker + Spinner -->
+  <div id="uiBlocker"></div>
+
+  <div id="globalSpinner">
+    <i class="bi bi-arrow-repeat spin"></i>
+  </div>
+
+  <!-- Logout Menu -->
+  <div id="logoutMenu">
+    <div id="dashboardBtn" class="menu-item" onclick="goDashboard()">
+      Dashboard
+    </div>
+
+    <div id="monitorBtn" class="menu-item" onclick="goMonitor()">
+      Monitor
+    </div>
+
+    <div id="logoutMenuBtn" class="menu-item logout" onclick="logoutFromMenu()">
+      Logout
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="top-header">
+    <div
+      class="profile-display"
+      id="profileNameDisplay"
+      style="font-size:18px;color:#455A64;font-weight:bold;"
+    >
+      <i class="bi bi-person-badge"></i>
+      <span id="userProfile"></span>
+    </div>
+
+    <button
+      id="logoutBtn"
+      type="button"
+      onclick="handleLogoutClick()"
+      style="font-size:18px;background-color:transparent;color:#455A64;border:none;cursor:pointer;"
+    >
+      <i class="bi bi-box-arrow-right" style="font-size:22px;"></i>
+    </button>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal">
+    <div class="modal-box">
+      <p id="modalText"></p>
+
+      <button id="modalYes" class="danger-btn" style="margin-right:10px;">
+        Yes
+      </button>
+
+      <button id="modalNo" class="grey-btn">
+        No
+      </button>
+    </div>
+  </div>
+
+  <!-- Active Sessions -->
+  <div class="section-card">
+    <h2>Active Sessions</h2>
+
+    <table id="sessionTable">
+      <thead>
+        <tr>
+          <th>Crew</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>X</th>
+        </tr>
+      </thead>
+
+      <tbody></tbody>
+    </table>
+
+    <div class="actions-row">
+      <button id="refreshBtn" class="primary-btn">
+        REFRESH
+      </button>
+
+      <div id="sessionSummary"></div>
+    </div>
+  </div>
+
+  <!-- Performance -->
+  <div class="section-card">
+    <h2>Performance</h2>
+
+    <label>
+      Select:
+      <select id="dateFilter">
+        <option>Loading...</option>
+      </select>
+    </label>
+
+    <table id="usernameTable">
+      <thead>
+        <tr>
+          <th>Crew</th>
+          <th>Total Serve</th>
+        </tr>
+      </thead>
+
+      <tbody></tbody>
+    </table>
+
+    <div class="actions-row">
+      <input
+        type="text"
+        id="excludeInput"
+        placeholder="Exclude (comma separated)"
+      >
+
+      <button id="refreshUsernamesBtn" class="success-btn">
+        REFRESH
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const WORKER_API = "https://fyrpc2.iamfyrus.workers.dev";
+
+    function cleanApiBase() {
+      return String(WORKER_API || "").replace(/\/+$/, "");
+    }
+
+    async function apiJson(path, options = {}) {
+      const res = await fetch(`${cleanApiBase()}${path}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        }
+      });
+
+      const raw = await res.text();
+
+      let data;
+
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        throw new Error(raw || `HTTP ${res.status}`);
+      }
+
+      if (!res.ok) {
+        throw new Error(JSON.stringify(data));
+      }
+
+      return data;
+    }
+
+    function showLoader() {
+      const spinner = document.getElementById("globalSpinner");
+
+      if (spinner) {
+        spinner.style.display = "flex";
+      }
+
+      blockUI(true);
+    }
+
+    function hideLoader() {
+      const spinner = document.getElementById("globalSpinner");
+
+      if (spinner) {
+        spinner.style.display = "none";
+      }
+
+      blockUI(false);
+    }
+
+    function blockUI(state) {
+      const blocker = document.getElementById("uiBlocker");
+
+      if (blocker) {
+        blocker.style.display = state ? "block" : "none";
+      }
+    }
+
+    function setAllButtonsDisabled(state) {
+      document
+        .querySelectorAll("button, input[type=button]")
+        .forEach(btn => {
+          btn.disabled = state;
+        });
+    }
+
+    function isMobileDevice() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+
+      return (
+        /android|iphone|ipad|ipod|iemobile|opera mini|mobile/i.test(ua) ||
+        window.innerWidth <= 768 ||
+        window.matchMedia("(pointer: coarse)").matches
+      );
+    }
+
+    function routeDashboardPage() {
+      window.location.href = isMobileDevice()
+        ? "mobile.html"
+        : "desktop.html";
+    }
+
+    function requireLogin() {
+      const token = localStorage.getItem("sessionToken");
+      const profile = localStorage.getItem("userProfile");
+
+      if (!token || !profile) {
+        window.location.replace("login.html");
+        return false;
+      }
+
+      document.getElementById("userProfile").textContent =
+        profile.toUpperCase();
+
+      apiJson("/validate", {
+        method: "POST",
+        body: JSON.stringify({ token })
+      })
+        .then(response => {
+          if (!response.valid) {
+            localStorage.clear();
+            window.location.replace("login.html");
+          }
+        })
+        .catch(err => {
+          console.log("VALIDATE ERROR:", err);
+        });
+
+      return true;
+    }
+
+    function renderSessions(data) {
+      const tbody = document.querySelector("#sessionTable tbody");
+
+      tbody.innerHTML = "";
+
+      let activeCount = 0;
+      let expiredCount = 0;
+
+      (data || []).forEach(row => {
+        if (row.expired) {
+          expiredCount++;
+        } else {
+          activeCount++;
+        }
+      });
+
+      document.getElementById("sessionSummary").innerHTML =
+        `Active: ${activeCount} | Expired: ${expiredCount}`;
+
+      if (!data || !data.length) {
+        tbody.innerHTML = "<tr><td colspan='4'>No active sessions</td></tr>";
+        return;
+      }
+
+      data.forEach(row => {
+        const username = String(row.username || "");
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${username.toUpperCase()}</td>
+          <td>${row.duration || ""}</td>
+          <td>${row.expired ? "Expired" : "Active"}</td>
+          <td>
+            <button
+              class="terminateBtn"
+              onclick="terminateSession('${username.replace(/'/g, "\\'")}')"
+            >
+              ✖
+            </button>
+          </td>
+        `;
+
+        if (row.expired) {
+          tr.style.opacity = "0.5";
+          tr.style.color = "red";
+        }
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadSessions() {
+      try {
+        showLoader();
+
+        const data = await apiJson("/sessions");
+
+        renderSessions(data);
+
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load sessions.");
+
+      } finally {
+        hideLoader();
+      }
+    }
+
+    function terminateSession(username) {
+      const modal = document.getElementById("confirmModal");
+      const modalText = document.getElementById("modalText");
+      const btnYes = document.getElementById("modalYes");
+      const btnNo = document.getElementById("modalNo");
+
+      modalText.textContent = `Terminate session for ${username}?`;
+      modal.style.display = "flex";
+
+      btnYes.onclick = null;
+      btnNo.onclick = null;
+
+      btnYes.onclick = async function () {
+        try {
+          btnYes.disabled = true;
+          btnNo.disabled = true;
+
+          btnYes.innerHTML =
+            '<div class="loader" style="width:18px;height:18px;border-width:3px;"></div>';
+
+          const response = await apiJson("/terminate", {
+            method: "POST",
+            body: JSON.stringify({ username })
+          });
+
+          modal.style.display = "none";
+
+          if (response.success) {
+            await loadSessions();
+          } else {
+            alert("Failed to terminate session.");
+          }
+
+        } catch (err) {
+          console.error(err);
+          alert("Failed to terminate session.");
+
+        } finally {
+          btnYes.disabled = false;
+          btnNo.disabled = false;
+          btnYes.textContent = "Yes";
+        }
+      };
+
+      btnNo.onclick = function () {
+        modal.style.display = "none";
+      };
+    }
+
+    async function loadDates() {
+      const select = document.getElementById("dateFilter");
+
+      try {
+        const dates = await apiJson("/dates?mode=performance");
+
+        select.innerHTML = "";
+
+        if (!dates || dates.length === 0) {
+          select.innerHTML = '<option value="ALL">ALL</option>';
+          return;
+        }
+
+        if (dates.length > 1) {
+          select.innerHTML += '<option value="ALL">ALL</option>';
+        }
+
+        dates.forEach(date => {
+          select.innerHTML += `<option value="${date}">${date}</option>`;
+        });
+
+      } catch (err) {
+        console.error(err);
+        select.innerHTML = '<option value="ALL">ALL</option>';
+      }
+    }
+
+    async function loadPerformance() {
+      try {
+        showLoader();
+
+        const excludeStr = document.getElementById("excludeInput").value.trim();
+
+        const excludeUsers = excludeStr
+          ? excludeStr
+              .split(",")
+              .map(user => user.trim().toLowerCase())
+              .filter(Boolean)
+          : [];
+
+        const selectedDate =
+          document.getElementById("dateFilter").value || "ALL";
+
+        const data = await apiJson("/performance", {
+          method: "POST",
+          body: JSON.stringify({
+            date: selectedDate
+          })
+        });
+
+        const tbody = document.querySelector("#usernameTable tbody");
+
+        tbody.innerHTML = "";
+
+        if (!data || !data.length) {
+          tbody.innerHTML = "<tr><td colspan='2'>No data</td></tr>";
+          return;
+        }
+
+        let totalCount = 0;
+
+        data.forEach(row => {
+          const username = String(row.username || "").toLowerCase();
+
+          if (!excludeUsers.includes(username)) {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+              <td>${username.toUpperCase()}</td>
+              <td>${row.count}</td>
+            `;
+
+            tbody.appendChild(tr);
+
+            totalCount += Number(row.count) || 0;
+          }
+        });
+
+        const trTotal = document.createElement("tr");
+
+        trTotal.style.fontWeight = "bold";
+
+        trTotal.innerHTML = `
+          <td>Total</td>
+          <td>${totalCount}</td>
+        `;
+
+        tbody.appendChild(trTotal);
+
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load performance.");
+
+      } finally {
+        hideLoader();
+      }
+    }
+
+    function handleLogoutClick() {
+      const role = (localStorage.getItem("userProfile") || "").toLowerCase();
+
+      if (role === "admin" || role === "mod") {
+        openLogoutMenu();
+      } else {
+        logout();
+      }
+    }
+
+    function openLogoutMenu() {
+      const menu = document.getElementById("logoutMenu");
+
+      menu.style.display =
+        menu.style.display === "block" ? "none" : "block";
+    }
+
+    document.addEventListener("click", event => {
+      const menu = document.getElementById("logoutMenu");
+      const btn = document.getElementById("logoutBtn");
+
+      if (!menu || !btn) return;
+
+      if (!menu.contains(event.target) && !btn.contains(event.target)) {
+        menu.style.display = "none";
+      }
+    });
+
+    function goMonitor() {
+      window.location.href = "monitor.html";
+    }
+
+    function goDashboard() {
+      routeDashboardPage();
+    }
+
+    async function logout() {
+      setAllButtonsDisabled(true);
+
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      if (logoutBtn) {
+        logoutBtn.innerHTML =
+          '<div class="loader" style="width:20px;height:20px;border-width:3px;"></div>';
+      }
+
+      const token = localStorage.getItem("sessionToken");
+
+      try {
+        if (token) {
+          await apiJson("/logout", {
+            method: "POST",
+            body: JSON.stringify({ token })
+          });
+        }
+
+      } catch (err) {
+        console.log("LOGOUT ERROR:", err);
+
+      } finally {
+        localStorage.clear();
+        window.location.replace("login.html");
+      }
+    }
+
+    function logoutFromMenu() {
+      const btn = document.getElementById("logoutMenuBtn");
+      const monitorBtn = document.getElementById("monitorBtn");
+      const dashboardBtn = document.getElementById("dashboardBtn");
+
+      [monitorBtn, dashboardBtn, btn].forEach(el => {
+        if (el) {
+          el.style.pointerEvents = "none";
+          el.style.opacity = "0.6";
+        }
+      });
+
+      if (btn) {
+        btn.innerHTML =
+          '<div class="loader" style="width:20px;height:20px;border-width:3px;margin:auto;"></div>';
+      }
+
+      logout();
+    }
+
+    document
+      .getElementById("refreshBtn")
+      .addEventListener("click", loadSessions);
+
+    document
+      .getElementById("refreshUsernamesBtn")
+      .addEventListener("click", loadPerformance);
+
+    document
+      .getElementById("dateFilter")
+      .addEventListener("change", loadPerformance);
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!requireLogin()) return;
+
+      await loadDates();
+      await loadSessions();
+      await loadPerformance();
+    });
+  </script>
 </body>
 </html>
