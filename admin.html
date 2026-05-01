@@ -498,7 +498,7 @@
       const profile = localStorage.getItem("userProfile");
 
       if (!token || !profile) {
-        window.location.replace("login.html");
+        window.location.replace("index.html");
         return false;
       }
 
@@ -512,7 +512,7 @@
         .then(response => {
           if (!response.valid) {
             localStorage.clear();
-            window.location.replace("login.html");
+            window.location.replace("index.html");
           }
         })
         .catch(err => {
@@ -799,7 +799,7 @@
 
       } finally {
         localStorage.clear();
-        window.location.replace("login.html");
+        window.location.replace("index.html");
       }
     }
 
