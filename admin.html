@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FyRPC Admin</title>
+<style>
+body{font-family:Arial,sans-serif;background:#eef2f5;margin:0;padding:20px}.bar{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px;border-radius:12px;box-shadow:0 3px 12px rgba(0,0,0,.08);margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}.card{background:#fff;border-radius:12px;padding:15px;box-shadow:0 3px 12px rgba(0,0,0,.08)}button,select{border:0;border-radius:8px;padding:8px 12px;cursor:pointer;background:#455A64;color:#fff}select{background:#fff;color:#111;border:1px solid #ccc}.danger{background:#d32f2f}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}th{background:#f7f7f7}
+</style>
+</head>
+<body>
+<div class="bar"><b>Admin</b><div><button onclick="location.href='desktop.html'">Dashboard</button> <button class="danger" onclick="logout()">Logout</button></div></div>
+<div style="display:none"><span id="userProfile"></span></div>
+<div class="grid">
+  <div class="card"><h3>Sessions</h3><div id="sessions">Loading...</div></div>
+  <div class="card"><h3>Performance</h3><select id="perfDate"></select> <button onclick="loadPerformance()">Load</button><div id="performance"></div></div>
+  <div class="card"><h3>Walk-in Sale</h3><select id="saleDate"></select> <button onclick="loadSale()">Load</button><div id="sale"></div></div>
+</div>
+<script src="shared.js"></script>
+<script>
+function table(rows, headers=['Username','Count']){return `<table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${Object.values(r).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
+async function loadDates(mode,id){const dates=await apiJson('/dates?mode='+mode); const el=document.getElementById(id); el.innerHTML='<option value="ALL">ALL</option>'+dates.map(d=>`<option value="${d}">${d}</option>`).join('')}
+async function loadSessions(){const data=await apiJson('/sessions'); document.getElementById('sessions').innerHTML='<table><tr><th>User</th><th>Duration</th><th>Status</th><th>Action</th></tr>'+data.map(s=>`<tr><td>${s.username}</td><td>${s.duration}</td><td>${s.expired?'Expired':'Active'}</td><td><button class="danger" onclick="terminateUser('${s.username}')">Terminate</button></td></tr>`).join('')+'</table>'}
+async function terminateUser(username){if(!confirm('Terminate '+username+'?'))return; await apiJson('/terminate',{method:'POST',body:JSON.stringify({username})}); loadSessions();}
+async function loadPerformance(){const date=document.getElementById('perfDate').value||'ALL'; const data=await apiJson('/performance',{method:'POST',body:JSON.stringify({date})}); document.getElementById('performance').innerHTML=table(data)}
+async function loadSale(){const date=document.getElementById('saleDate').value||'ALL'; const data=await apiJson('/sale',{method:'POST',body:JSON.stringify({date})}); document.getElementById('sale').innerHTML=table(data)}
+async function initAdmin(){await loadSessions(); await loadDates('performance','perfDate'); await loadDates('sale','saleDate'); await loadPerformance(); await loadSale();}
+window.addEventListener('load',initAdmin);
+</script>
+</body>
+</html>
