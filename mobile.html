@@ -1792,6 +1792,27 @@ window.addEventListener("message", (event) => {
            }
          });
 
+         document.addEventListener("click", function (e) {
+           const btn = e.target.closest(".dropdown-btn");
+           const menus = document.querySelectorAll(".dropdown-menu");
+
+           menus.forEach(m => m.classList.remove("show"));
+
+           if (btn) {
+             const menu = btn.nextElementSibling;
+             if (menu) {
+               menu.classList.toggle("show");
+               e.stopPropagation();
+             }
+           }
+         });
+
+         function setOption(val, label) {
+           document.getElementById("searchOption").value = val;
+           document.getElementById("searchDropdownBtn").innerText = label;
+           updatePlaceholder();
+         }
+
 </script>
 
   <script src="shared.js"></script>
