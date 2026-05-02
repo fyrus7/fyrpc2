@@ -1293,32 +1293,15 @@ window.__legacyGoogleScriptRun = {
 
 <!-- QR Scanner Modal -->
 <div id="qrScannerModal" class="modal">
-  <div class="modal-content scanner-modal-content">
-
-    <button class="back-button scanner-back-btn" onclick="closeModal();">
+  <div class="modal-content">
+    <button class="back-button" onclick="closeModal();">
       <i class="bi bi-arrow-left"></i> Back
     </button>
-
-    <div class="modal-body scanner-modal-body">
-
-      <div id="reader"></div>
-
-      <!-- UI macam scanner mobile -->
-      <div class="scanner-live-dot"></div>
-
-      <div class="scanner-box-ui">
-        <div class="scanner-line-ui"></div>
-        <div class="scanner-dot-ui scanner-dot-left"></div>
-        <div class="scanner-dot-ui scanner-dot-right"></div>
-      </div>
-
-      <div id="errorMessage" class="scanner-error" style="display:none;"></div>
+    <div class="modal-body">
+      <div id="reader" style="width: 100%;"></div>
+      <div id="errorMessage" style="color: white; font-weight: bold; margin-top: 20%; display: none;"></div>
     </div>
-
-    <button id="torchButton" class="torchToggle scanner-torch-btn" onclick="toggleTorch()" style="display:none;">
-      <i class="bi bi-lightbulb-off" style="font-size: 26px;"></i><br>Torch Off
-    </button>
-
+    <button id="torchButton" class="torchToggle" onclick="toggleTorch()"></button>
   </div>
 </div>
         
