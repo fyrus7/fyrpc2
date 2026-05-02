@@ -223,11 +223,24 @@
 const WORKER_API = window.APP_CONFIG.WORKER_API;
  
 let isLoggingIn = false;
+let validatedSessionProfile = null;
 
 function cleanApiBase() {
   return String(WORKER_API || "").replace(/\/+$/, "");
 }
 
+ 
+function isManualReload() {
+  const nav = performance.getEntriesByType("navigation")[0];
+
+  if (nav) {
+    return nav.type === "reload";
+  }
+
+  return performance.navigation && performance.navigation.type === 1;
+}
+
+ 
 function isMobileDevice() {
   const ua = navigator.userAgent || navigator.vendor || window.opera || "";
 
@@ -278,12 +291,21 @@ window.addEventListener("DOMContentLoaded", () => {
         }
 
         if (response.valid) {
-          loadDashboard(response.profile);
-        } else {
-          localStorage.clear();
-          submitButton.innerText = "Login";
-          submitButton.disabled = false;
-        }
+  localStorage.setItem("userProfile", response.profile);
+
+  if (isManualReload()) {
+    validatedSessionProfile = response.profile;
+    submitButton.innerText = "Continue";
+    submitButton.disabled = false;
+    return;
+  }
+
+  loadDashboard(response.profile);
+} else {
+  localStorage.clear();
+  submitButton.innerText = "Login";
+  submitButton.disabled = false;
+}
       })
       .catch(err => {
         console.log("VALIDATE FETCH ERROR:", err);
@@ -342,6 +364,12 @@ function validateLogin() {
   const enteredPassword = document.getElementById("pwd")?.value || "";
   const submitButton = document.getElementById("submit-btn");
   const errorMessage = document.getElementById("error-message");
+
+ if (validatedSessionProfile && !enteredPassword.trim()) {
+  isLoggingIn = false;
+  loadDashboard(validatedSessionProfile);
+  return;
+}
 
   if (!submitButton || !errorMessage) {
     isLoggingIn = false;
