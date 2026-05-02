@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<script src="https://unpkg.com/@zxing/browser@0.2.0"></script>
+
 <style>
         /* Set the background color for the entire page */
         body {
@@ -986,6 +986,7 @@
 </style>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
 
 <style>
 
@@ -1042,7 +1043,126 @@
   100% { transform: rotate(360deg); }
 
     
+/* ===== ZXING QR SCANNER MODAL UI ===== */
 
+.qr-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #000;
+  overflow: hidden;
+}
+
+#qrVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+.qr-back-btn {
+  position: absolute;
+  top: 14px;
+  left: 12px;
+  z-index: 10;
+  background: rgba(0,0,0,0.25);
+  color: #fff;
+  border: none;
+  font-size: 17px;
+  padding: 8px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.qr-live-dot {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 14px;
+  height: 14px;
+  background: #00d26a;
+  border-radius: 50%;
+  z-index: 10;
+  box-shadow: 0 0 10px rgba(0,210,106,0.9);
+}
+
+.qr-scan-box {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 80vw;
+  max-width: 340px;
+  height: 80vw;
+  max-height: 340px;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.20);
+  border: 1px solid rgba(255,255,255,0.28);
+  box-sizing: border-box;
+  z-index: 5;
+}
+
+.qr-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: #ff3b30;
+  box-shadow: 0 0 8px rgba(255,59,48,0.95);
+}
+
+.qr-dot {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  background: #ffb000;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 7px rgba(255,176,0,0.9);
+}
+
+.qr-dot-left {
+  left: -3px;
+}
+
+.qr-dot-right {
+  right: 55px;
+}
+
+.qr-error {
+  position: absolute;
+  left: 50%;
+  bottom: 100px;
+  transform: translateX(-50%);
+  width: 85%;
+  max-width: 330px;
+  z-index: 20;
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  background: rgba(0,0,0,0.55);
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+.qr-torch-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 25px;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: 145px;
+  height: 55px;
+  background: rgba(0,0,0,0.35);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  cursor: pointer;
+}
 </style>
 
   <script>
@@ -1141,28 +1261,27 @@ window.__legacyGoogleScriptRun = {
 
 
 <!-- QR Scanner Modal -->
-<div id="qrScannerModal" class="modal">
-  <div class="modal-content">
-    <button class="back-button" onclick="closeScanner();">
-      <i class="bi bi-arrow-left"></i> Back
-    </button>
+<div id="qrScannerModal" class="qr-modal">
+  <video id="qrVideo" autoplay muted playsinline></video>
 
-    <div class="modal-body">
-      <video
-        id="qrVideo"
-        autoplay
-        muted
-        playsinline
-        style="width:100%; height:calc(100vh - 120px); object-fit:cover; background:#000;"
-      ></video>
+  <button class="qr-back-btn" onclick="closeModal()">
+    <i class="bi bi-arrow-left"></i> Back
+  </button>
 
-      <div id="errorMessage" style="color: white; font-weight: bold; margin-top: 20%; display: none;"></div>
-    </div>
+  <div class="qr-live-dot"></div>
 
-    <button id="torchButton" class="torchToggle" onclick="toggleTorch()">
-      <i class="bi bi-lightbulb" style="font-size: 30px;"></i><br>Torch Off
-    </button>
+  <div class="qr-scan-box">
+    <div class="qr-scan-line"></div>
+    <div class="qr-dot qr-dot-left"></div>
+    <div class="qr-dot qr-dot-right"></div>
   </div>
+
+  <div id="errorMessage" class="qr-error" style="display:none;"></div>
+
+  <button id="torchButton" class="qr-torch-btn" onclick="toggleTorch()" style="display:none;">
+    <i class="bi bi-lightbulb-off" style="font-size:26px;"></i><br>
+    Torch Off
+  </button>
 </div>
         
 
@@ -1614,87 +1733,24 @@ function setText(id, text, isHTML = false) {
 
 
 
- // ZXING MODAL SCANNER
-let qrReader = null;
-let qrControls = null;
-let qrScanned = false;
+<script>
+// ===== ZXING QR SCANNER MODAL VERSION =====
+// Flow dikekalkan:
+// scan result -> masuk input searchTerm -> search(newValue)
+
+window.beepSound = window.beepSound || new Audio('https://github.com/fyrus7/FyrusApp/raw/main/media/QRScan.mp3');
+
+var lastScanned = "";
+var lastScanTime = 0;
+var scannedSet = new Set();
+
+let zxingReader = null;
+let zxingControls = null;
 let currentVideoTrack = null;
 let torchEnabled = false;
+let scanLocked = false;
 
-async function openScannerPopup() {
-  scannedSet.clear();
-  lastScanned = "";
-  lastScanTime = 0;
-  qrScanned = false;
-  torchEnabled = false;
-
-  const modal = document.getElementById("qrScannerModal");
-  const video = document.getElementById("qrVideo");
-  const errorBox = document.getElementById("errorMessage");
-  const torchBtn = document.getElementById("torchButton");
-  const footer = document.getElementById("footer");
-
-  if (!modal || !video) return;
-
-  errorBox.style.display = "none";
-  errorBox.innerText = "";
-  torchBtn.style.display = "none";
-
-  modal.style.display = "block";
-  if (footer) footer.classList.add("hide-footer");
-
-  try {
-    qrReader = new ZXingBrowser.BrowserQRCodeReader();
-
-    qrControls = await qrReader.decodeFromVideoDevice(
-      null,
-      video,
-      function (result, error, controls) {
-        if (!result || qrScanned) return;
-
-        qrScanned = true;
-
-        const decodedText = result.getText();
-
-        handleScannedResult(decodedText);
-
-        closeScanner();
-      }
-    );
-
-    setTimeout(() => {
-      try {
-        const stream = video.srcObject;
-        if (!stream) return;
-
-        const tracks = stream.getVideoTracks();
-        if (!tracks || tracks.length === 0) return;
-
-        currentVideoTrack = tracks[0];
-
-        const capabilities = currentVideoTrack.getCapabilities
-          ? currentVideoTrack.getCapabilities()
-          : {};
-
-        if (capabilities.torch) {
-          torchBtn.style.display = "block";
-        }
-      } catch (e) {
-        console.log("Torch not supported");
-      }
-    }, 800);
-
-  } catch (err) {
-    console.error(err);
-
-    errorBox.style.display = "block";
-    errorBox.innerText = "Camera blocked / permission denied";
-
-    if (footer) footer.classList.remove("hide-footer");
-  }
-}
-
-function handleScannedResult(decodedText) {
+function processScannedValue(decodedText) {
   if (!decodedText) return;
 
   const input = document.getElementById("searchTerm");
@@ -1721,60 +1777,167 @@ function handleScannedResult(decodedText) {
   search(newValue);
 }
 
+async function openScannerPopup() {
+  scannedSet.clear();
+  lastScanned = "";
+  lastScanTime = 0;
+  scanLocked = false;
+  torchEnabled = false;
+
+  const modal = document.getElementById("qrScannerModal");
+  const video = document.getElementById("qrVideo");
+  const errorMessage = document.getElementById("errorMessage");
+  const torchButton = document.getElementById("torchButton");
+  const footer = document.getElementById("footer");
+
+  if (!modal || !video) return;
+
+  errorMessage.style.display = "none";
+  errorMessage.innerText = "";
+
+  torchButton.style.display = "none";
+  torchButton.innerHTML = '<i class="bi bi-lightbulb-off" style="font-size:26px;"></i><br>Torch Off';
+
+  modal.style.display = "block";
+  if (footer) footer.classList.add("hide-footer");
+
+  try {
+    zxingReader = new ZXingBrowser.BrowserQRCodeReader();
+
+    zxingControls = await zxingReader.decodeFromConstraints(
+      {
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      },
+      video,
+      function(result, error, controls) {
+        if (!result) return;
+        if (scanLocked) return;
+
+        const decodedText = result.getText ? result.getText() : result.text;
+        if (!decodedText) return;
+
+        scanLocked = true;
+
+        processScannedValue(decodedText);
+
+        setTimeout(function() {
+          closeModal();
+        }, 150);
+      }
+    );
+
+    setTimeout(function() {
+      try {
+        const stream = video.srcObject;
+        if (!stream) return;
+
+        const tracks = stream.getVideoTracks();
+        if (!tracks || tracks.length === 0) return;
+
+        currentVideoTrack = tracks[0];
+
+        const capabilities = currentVideoTrack.getCapabilities
+          ? currentVideoTrack.getCapabilities()
+          : null;
+
+        if (capabilities && capabilities.torch) {
+          torchButton.style.display = "block";
+        }
+      } catch (e) {
+        console.log("Torch not supported:", e);
+      }
+    }, 700);
+
+  } catch (err) {
+    console.error("Scanner start failed:", err);
+
+    errorMessage.style.display = "block";
+    errorMessage.innerText = "Camera blocked / scanner failed";
+
+    if (footer) footer.classList.remove("hide-footer");
+  }
+}
+
 function closeScanner() {
   const modal = document.getElementById("qrScannerModal");
   const video = document.getElementById("qrVideo");
   const footer = document.getElementById("footer");
-  const torchBtn = document.getElementById("torchButton");
+  const torchButton = document.getElementById("torchButton");
 
   try {
-    if (qrControls) {
-      qrControls.stop();
-      qrControls = null;
+    if (zxingControls) {
+      zxingControls.stop();
+      zxingControls = null;
     }
+  } catch (e) {
+    console.log("ZXing stop error:", e);
+  }
 
+  try {
     if (video && video.srcObject) {
-      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject.getTracks().forEach(function(track) {
+        track.stop();
+      });
       video.srcObject = null;
     }
   } catch (e) {
-    console.log("Scanner already stopped");
+    console.log("Video stop error:", e);
   }
 
+  zxingReader = null;
   currentVideoTrack = null;
-  qrReader = null;
-  qrScanned = false;
   torchEnabled = false;
+  scanLocked = false;
 
-  if (torchBtn) {
-    torchBtn.style.display = "none";
-    torchBtn.innerHTML = '<i class="bi bi-lightbulb" style="font-size:30px;"></i><br>Torch Off';
+  if (torchButton) {
+    torchButton.style.display = "none";
+    torchButton.innerHTML = '<i class="bi bi-lightbulb-off" style="font-size:26px;"></i><br>Torch Off';
   }
 
   if (modal) modal.style.display = "none";
   if (footer) footer.classList.remove("hide-footer");
 }
 
-async function toggleTorch() {
-  if (!currentVideoTrack) return;
+function closeModal() {
+  closeScanner();
+}
 
-  const torchBtn = document.getElementById("torchButton");
+async function toggleTorch() {
+  const btn = document.getElementById("torchButton");
+  if (!currentVideoTrack || !btn) return;
 
   try {
+    const capabilities = currentVideoTrack.getCapabilities
+      ? currentVideoTrack.getCapabilities()
+      : null;
+
+    if (!capabilities || !capabilities.torch) return;
+
     torchEnabled = !torchEnabled;
 
     await currentVideoTrack.applyConstraints({
       advanced: [{ torch: torchEnabled }]
     });
 
-    torchBtn.innerHTML = torchEnabled
-      ? '<i class="bi bi-lightbulb" style="font-size:30px;"></i><br>Torch On'
-      : '<i class="bi bi-lightbulb-off" style="font-size:30px;"></i><br>Torch Off';
+    btn.innerHTML = torchEnabled
+      ? '<i class="bi bi-lightbulb" style="font-size:26px;"></i><br>Torch On'
+      : '<i class="bi bi-lightbulb-off" style="font-size:26px;"></i><br>Torch Off';
 
   } catch (e) {
-    console.log("Torch failed", e);
+    console.log("Torch toggle failed:", e);
   }
-}       
+}
+
+document.addEventListener("visibilitychange", function() {
+  if (document.hidden) {
+    closeScanner();
+  }
+});
 
 
 
