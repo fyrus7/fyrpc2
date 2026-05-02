@@ -803,45 +803,10 @@ async function validateProtectedPage() {
   syncCollectButton();
 }
 
-
-
-// Hide protected page URL
-function getCurrentPageName() {
-  return window.location.pathname.split("/").pop().toLowerCase();
-}
-
-function isProtectedPage() {
-  const page = getCurrentPageName();
-  return ["mobile.html", "desktop.html", "admin.html", "monitor.html"].includes(page);
-}
-
-function getCleanBasePath() {
-  return window.location.pathname.replace(
-    /\/(mobile|desktop|admin|monitor)\.html$/i,
-    "/"
-  );
-}
-
-function hideProtectedPageUrl() {
-  if (!isProtectedPage()) return;
-
-  const cleanUrl = window.location.origin + getCleanBasePath();
-
-  history.replaceState(
-    { hiddenPage: getCurrentPageName() },
-    "",
-    cleanUrl
-  );
-}
-
 // Override Apps Script page onload before it fires.
 window.onload = null;
-
-hideProtectedPageUrl();
 loadSummaryCard();
 window.addEventListener("load", validateProtectedPage);
-
-
 
 window.addEventListener("storage", function(e) {
   if (e.key === "sessionToken" && !e.newValue) loadLogin();
