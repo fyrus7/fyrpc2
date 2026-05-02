@@ -1041,7 +1041,7 @@
 
 @keyframes spin {
   100% { transform: rotate(360deg); }
-
+}
     
 /* ===== ZXING QR SCANNER MODAL UI ===== */
 
@@ -1706,38 +1706,8 @@ function logoutFromMenu() {
   }
 }
 
-</script>
 
-
-<script>
-// NEW QR FUNCTION ONLY FOR MOBILE
-window.beepSound = window.beepSound || new Audio('https://github.com/fyrus7/FyrusApp/raw/main/media/QRScan.mp3');
-
-var lastScanned = "";
-var lastScanTime = 0;
-var scannedSet = new Set();
-
-// Helper: safe set display - new QR code
-function setDisplay(id, value) {
-  const el = document.getElementById(id);
-  if (el && el.style) el.style.display = value;
-}
-
-// Helper: safe set text/html
-function setText(id, text, isHTML = false) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (isHTML) el.innerHTML = text;
-  else el.textContent = text;
-}
-
-
-
-<script>
 // ===== ZXING QR SCANNER MODAL VERSION =====
-// Flow dikekalkan:
-// scan result -> masuk input searchTerm -> search(newValue)
-
 window.beepSound = window.beepSound || new Audio('https://github.com/fyrus7/FyrusApp/raw/main/media/QRScan.mp3');
 
 var lastScanned = "";
@@ -1749,6 +1719,18 @@ let zxingControls = null;
 let currentVideoTrack = null;
 let torchEnabled = false;
 let scanLocked = false;
+
+function setDisplay(id, value) {
+  const el = document.getElementById(id);
+  if (el && el.style) el.style.display = value;
+}
+
+function setText(id, text, isHTML = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (isHTML) el.innerHTML = text;
+  else el.textContent = text;
+}
 
 function processScannedValue(decodedText) {
   if (!decodedText) return;
@@ -1790,18 +1772,29 @@ async function openScannerPopup() {
   const torchButton = document.getElementById("torchButton");
   const footer = document.getElementById("footer");
 
-  if (!modal || !video) return;
+  if (!modal || !video) {
+    alert("Scanner modal/video element not found");
+    return;
+  }
 
-  errorMessage.style.display = "none";
-  errorMessage.innerText = "";
+  if (errorMessage) {
+    errorMessage.style.display = "none";
+    errorMessage.innerText = "";
+  }
 
-  torchButton.style.display = "none";
-  torchButton.innerHTML = '<i class="bi bi-lightbulb-off" style="font-size:26px;"></i><br>Torch Off';
+  if (torchButton) {
+    torchButton.style.display = "none";
+    torchButton.innerHTML = '<i class="bi bi-lightbulb-off" style="font-size:26px;"></i><br>Torch Off';
+  }
 
   modal.style.display = "block";
   if (footer) footer.classList.add("hide-footer");
 
   try {
+    if (!window.ZXingBrowser) {
+      throw new Error("ZXingBrowser library not loaded");
+    }
+
     zxingReader = new ZXingBrowser.BrowserQRCodeReader();
 
     zxingControls = await zxingReader.decodeFromConstraints(
@@ -1845,7 +1838,7 @@ async function openScannerPopup() {
           ? currentVideoTrack.getCapabilities()
           : null;
 
-        if (capabilities && capabilities.torch) {
+        if (capabilities && capabilities.torch && torchButton) {
           torchButton.style.display = "block";
         }
       } catch (e) {
@@ -1856,10 +1849,10 @@ async function openScannerPopup() {
   } catch (err) {
     console.error("Scanner start failed:", err);
 
-    errorMessage.style.display = "block";
-    errorMessage.innerText = "Camera blocked / scanner failed";
-
-    if (footer) footer.classList.remove("hide-footer");
+    if (errorMessage) {
+      errorMessage.style.display = "block";
+      errorMessage.innerText = "Scanner failed: " + err.message;
+    }
   }
 }
 
@@ -1938,9 +1931,6 @@ document.addEventListener("visibilitychange", function() {
     closeScanner();
   }
 });
-
-
-
 
 
          window.addEventListener("scroll", function () {
