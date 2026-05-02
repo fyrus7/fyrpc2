@@ -389,8 +389,10 @@
     <table id="sheetTable"></table>
   </div>
 
+  <script src="config.js"></script>
+  
   <script>
-    const WORKER_API = "https://fyrpc2.iamfyrus.workers.dev";
+    const WORKER_API = window.APP_CONFIG.WORKER_API;
 
     function cleanApiBase() {
       return String(WORKER_API || "").replace(/\/+$/, "");
