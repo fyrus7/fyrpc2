@@ -813,6 +813,27 @@ window.addEventListener("storage", function(e) {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
+    const secretTitle = safeEl("secretSummaryTap");
+  let secretSummaryTapCount = 0;
+  let secretSummaryTapTimer = null;
+
+  if (secretTitle) {
+    secretTitle.addEventListener("click", function () {
+      secretSummaryTapCount++;
+
+      clearTimeout(secretSummaryTapTimer);
+      secretSummaryTapTimer = setTimeout(() => {
+        secretSummaryTapCount = 0;
+      }, 2000);
+
+      if (secretSummaryTapCount >= 7) {
+        secretSummaryTapCount = 0;
+        clearTimeout(secretSummaryTapTimer);
+        loadSummaryCard();
+      }
+    });
+  }
+  
   const btn = safeEl("selectAllBtn");
   if (btn) {
     btn.addEventListener("click", function () {
