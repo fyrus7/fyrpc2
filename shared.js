@@ -804,7 +804,8 @@ async function validateProtectedPage() {
 }
 
 
-// Hide endpoint url
+
+// Hide protected page URL
 function getCurrentPageName() {
   return window.location.pathname.split("/").pop().toLowerCase();
 }
@@ -814,28 +815,32 @@ function isProtectedPage() {
   return ["mobile.html", "desktop.html", "admin.html", "monitor.html"].includes(page);
 }
 
-function isManualReload() {
-  const nav = performance.getEntriesByType("navigation")[0];
-  return nav && nav.type === "reload";
+function getCleanBasePath() {
+  return window.location.pathname.replace(
+    /\/(mobile|desktop|admin|monitor)\.html$/i,
+    "/"
+  );
 }
 
 function hideProtectedPageUrl() {
   if (!isProtectedPage()) return;
 
-  // Change URL from /mobile.html to root folder /
-  // Example: https://domain.com/mobile.html -> https://domain.com/
-  history.replaceState(null, "", "./");
+  const cleanUrl = window.location.origin + getCleanBasePath();
+
+  history.replaceState(
+    { hiddenPage: getCurrentPageName() },
+    "",
+    cleanUrl
+  );
 }
 
 // Override Apps Script page onload before it fires.
 window.onload = null;
-if (isProtectedPage() && isManualReload()) {
-  window.location.replace("index.html");
-} else {
-  hideProtectedPageUrl();
-  loadSummaryCard();
-  window.addEventListener("load", validateProtectedPage);
-}
+
+hideProtectedPageUrl();
+loadSummaryCard();
+window.addEventListener("load", validateProtectedPage);
+
 
 
 window.addEventListener("storage", function(e) {
