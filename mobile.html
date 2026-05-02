@@ -457,11 +457,11 @@
         /**********************/
 
 
-        /* Modal Styles */
+        /* Modal Styles 
         .modal {
           display: none;
           position: fixed;
-          z-index: 1000;/
+          z-index: 10000;
           left: 0;
           top: 0;
           width: 100%;
@@ -508,56 +508,96 @@
               color: white; // #455A64;
               border: none; // solid 0.5px white; // #455A64;
               border-radius: 5px;
-            }
+            } */
 
 
-        /* 🔥 reuse modal style kau 
-        .modal {
-          display:block;
-          position:fixed;
-          inset:0;
-          background:black;
-        }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+}
 
-        .modal-body {
-          text-align:center;
-          padding-top:60px;
-        }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
-        #reader {
-          width:100%;
-        }
+/* QR Scanner Modal */
+.modal {
+  display: none;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  background: #000;
+  z-index: 10000;
+  text-align: left;
+}
 
-        .back-button {
-          position:absolute;
-          top:10px;
-          left:10px;
-          color:white;
-          font-size:18px;
-          background:none;
-          border:none;
-          z-index:999;
-        }
+.modal-content {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #000;
+}
 
-        .torchToggle {
-          position:absolute;
-          top:70px;
-          left:50%;
-          transform:translateX(-50%);
-          z-index:999;
-          width:150px;
-          height:45px;
-          background:transparent;
-          color:white;
-          border:none;
-        }
+.modal-body {
+  width: 100%;
+  height: 100%;
+  padding-top: 60px;
+  margin: 0;
+  text-align: center;
+  overflow: hidden;
+}
 
-        /* hide default UI *
-        #reader__dashboard,
-        #reader__status_span {
-          display:none !important;
-        } */
+#reader {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
 
+#reader video {
+  width: 100vw !important;
+  height: calc(100dvh - 60px) !important;
+  object-fit: cover !important;
+}
+
+.back-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  font-size: 18px;
+  padding-top: 10px;
+  z-index: 10001;
+}
+
+.torchToggle {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  display: none;
+  width: 150px;
+  height: 45px;
+  cursor: pointer;
+  background-color: transparent;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
    
 
             .form-container {
@@ -1756,27 +1796,9 @@ async function startScanner() {
     resetUI?.();
     stopScanner?.();
   });
-
-  setDisplay('startButton', 'none');
-  setDisplay('stopButton', 'inline-block');
-
-  setTimeout(() => checkBackCamera?.(), 3000);
 }
 
-// Check for back camera presence and show alert if none
-async function checkBackCamera() {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const backCamera = devices.find(device => device.kind === 'videoinput' && device.label.toLowerCase().includes('back'));
 
-    if (!backCamera) {
-      stopScanner();
-      resetUI();
-    }
-  } catch (error) {
-    console.error('Error checking for back camera:', error);
-  }
-}
 
 // Function to close the modal
 function closeModal() {
@@ -1841,56 +1863,10 @@ function resetTorchState() {
 }
 
 function resetUI() {
-  setDisplay('startButton', 'inline-block');
-  setDisplay('stopButton', 'none');
   resetReader();
 }
 
-// Attach event listeners
-document.addEventListener("DOMContentLoaded", function() {
-  const startButton = document.getElementById('startButton');
-  const stopButton = document.getElementById('stopButton');
-  const torchButton = document.getElementById('torchButton');
-  const backButton = document.getElementById('backButton');
 
-  if (startButton && stopButton && torchButton && backButton) {
-    startButton.addEventListener('click', startScanner);
-    stopButton.addEventListener('click', stopScanner);
-    torchButton.addEventListener('click', toggleTorch);
-    backButton.addEventListener('click', closeModal);
-  }
-});
-
-
-window.addEventListener("message", (event) => {
-
-  const decodedText = event.data;
-  if (!decodedText) return;
-
-  const input = document.getElementById("searchTerm");
-  if (!input) return;
-
-  const current = input.value.trim();
-
-  let list = current
-    ? current.split(",").map(v => v.trim()).filter(v => v)
-    : [];
-
-  if (scannedSet.has(decodedText)) return;
-
-  scannedSet.add(decodedText);
-
-  beepSound?.play();
-  navigator.vibrate?.(100);
-
-  list.push(decodedText);
-
-  const newValue = list.join(", ");
-  input.value = newValue;
-
-  search(newValue);
-
-});
 
 
          window.addEventListener("scroll", function () {
