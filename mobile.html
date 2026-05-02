@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-
+<script src="https://unpkg.com/@zxing/browser@0.2.0"></script>
 <style>
         /* Set the background color for the entire page */
         body {
@@ -1143,17 +1143,28 @@ window.__legacyGoogleScriptRun = {
 <!-- QR Scanner Modal -->
 <div id="qrScannerModal" class="modal">
   <div class="modal-content">
-    <button class="back-button" onclick="closeModal();">
+    <button class="back-button" onclick="closeScanner();">
       <i class="bi bi-arrow-left"></i> Back
     </button>
+
     <div class="modal-body">
-      <div id="reader" style="width: 100%;"></div> <!-- QR code scanner container -->
+      <video
+        id="qrVideo"
+        autoplay
+        muted
+        playsinline
+        style="width:100%; height:calc(100vh - 120px); object-fit:cover; background:#000;"
+      ></video>
+
       <div id="errorMessage" style="color: white; font-weight: bold; margin-top: 20%; display: none;"></div>
-        </div>
-      <button id="torchButton" class="torchToggle" onclick="toggleTorch()">
-            </button>
-            </div>
-          </div>
+    </div>
+
+    <button id="torchButton" class="torchToggle" onclick="toggleTorch()">
+      <i class="bi bi-lightbulb" style="font-size: 30px;"></i><br>Torch Off
+    </button>
+  </div>
+</div>
+        
 
 <form style="text-align: left; display: inline-block; position: relative;">
 
@@ -1601,159 +1612,89 @@ function setText(id, text, isHTML = false) {
   else el.textContent = text;
 }
 
-// NEW SCANNER FUNCTION BYPASS
-function openScannerPopup() {
 
+
+ // ZXING MODAL SCANNER
+let qrReader = null;
+let qrControls = null;
+let qrScanned = false;
+let currentVideoTrack = null;
+let torchEnabled = false;
+
+async function openScannerPopup() {
   scannedSet.clear();
   lastScanned = "";
   lastScanTime = 0;
+  qrScanned = false;
+  torchEnabled = false;
 
-  const win = window.open("", "_blank");
+  const modal = document.getElementById("qrScannerModal");
+  const video = document.getElementById("qrVideo");
+  const errorBox = document.getElementById("errorMessage");
+  const torchBtn = document.getElementById("torchButton");
+  const footer = document.getElementById("footer");
 
-  win.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"><\/script>
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  if (!modal || !video) return;
 
-      <style>
-        body {
-          margin:0;
-          background:black;
-          overflow:hidden;
-          font-family:sans-serif;
+  errorBox.style.display = "none";
+  errorBox.innerText = "";
+  torchBtn.style.display = "none";
+
+  modal.style.display = "block";
+  if (footer) footer.classList.add("hide-footer");
+
+  try {
+    qrReader = new ZXingBrowser.BrowserQRCodeReader();
+
+    qrControls = await qrReader.decodeFromVideoDevice(
+      null,
+      video,
+      function (result, error, controls) {
+        if (!result || qrScanned) return;
+
+        qrScanned = true;
+
+        const decodedText = result.getText();
+
+        handleScannedResult(decodedText);
+
+        closeScanner();
+      }
+    );
+
+    setTimeout(() => {
+      try {
+        const stream = video.srcObject;
+        if (!stream) return;
+
+        const tracks = stream.getVideoTracks();
+        if (!tracks || tracks.length === 0) return;
+
+        currentVideoTrack = tracks[0];
+
+        const capabilities = currentVideoTrack.getCapabilities
+          ? currentVideoTrack.getCapabilities()
+          : {};
+
+        if (capabilities.torch) {
+          torchBtn.style.display = "block";
         }
+      } catch (e) {
+        console.log("Torch not supported");
+      }
+    }, 800);
 
-        /* 🔥 reuse modal style kau */
-        .modal {
-          display:block;
-          position:fixed;
-          inset:0;
-          background:black;
-        }
+  } catch (err) {
+    console.error(err);
 
-        .modal-body {
-          text-align:center;
-          padding-top:60px;
-        }
+    errorBox.style.display = "block";
+    errorBox.innerText = "Camera blocked / permission denied";
 
-        #reader {
-          width:100%;
-        }
-
-        .back-button {
-          position:absolute;
-          top:10px;
-          left:10px;
-          color:white;
-          font-size:18px;
-          background:none;
-          border:none;
-          z-index:999;
-        }
-
-        .torchToggle {
-          position:absolute;
-          top:70px;
-          left:50%;
-          transform:translateX(-50%);
-          z-index:999;
-          width:150px;
-          height:45px;
-          background:transparent;
-          color:white;
-          border:none;
-        }
-
-        /* hide default UI */
-        #reader__dashboard,
-        #reader__status_span {
-          display:none !important;
-        }
-
-      </style>
-    </head>
-    <body>
-
-      <div class="modal">
-        <button class="back-button" onclick="window.close()">⬅ Back</button>
-
-        <div class="modal-body">
-          <div id="reader"></div>
-        </div>
-
-        <button id="torchButton" class="torchToggle">
-  <i class="bi bi-lightbulb" style="font-size: 30px;"></i><br>Torch Off
-</button>
-      </div>
-
-      <script>
-
-        let html5QrCode = new Html5Qrcode("reader");
-        let torchEnabled = false;
-
-        function isTorchSupported() {
-          try {
-            const settings = html5QrCode.getRunningTrackSettings();
-            return "torch" in settings;
-          } catch {
-            return false;
-          }
-        }
-
-        function toggleTorch() {
-  if (!html5QrCode) return;
-
-  const btn = document.getElementById("torchButton");
-
-  if (!torchEnabled) {
-    html5QrCode.applyVideoConstraints({ advanced: [{ torch: true }] });
-    torchEnabled = true;
-
-    btn.innerHTML = '<i class="bi bi-lightbulb" style="font-size:30px;"></i><br>Torch On';
-
-  } else {
-    html5QrCode.applyVideoConstraints({ advanced: [{ torch: false }] });
-    torchEnabled = false;
-
-    btn.innerHTML = '<i class="bi bi-lightbulb-off" style="font-size:30px;"></i><br>Torch Off';
+    if (footer) footer.classList.remove("hide-footer");
   }
 }
 
-        document.getElementById("torchButton").onclick = toggleTorch;
-
-        html5QrCode.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 300, height: 300 } },
-          (decodedText) => {
-
-            window.opener.postMessage(decodedText, "*");
-
-            html5QrCode.stop().then(() => {
-              window.close();
-            });
-
-          }
-        ).then(() => {
-          if (isTorchSupported()) {
-            document.getElementById("torchButton").style.display = "block";
-          }
-        }).catch(err => {
-          alert("Camera blocked");
-        });
-
-      <\/script>
-
-    </body>
-    </html>
-  `);
-}
-
-window.addEventListener("message", (event) => {
-
-  const decodedText = event.data;
+function handleScannedResult(decodedText) {
   if (!decodedText) return;
 
   const input = document.getElementById("searchTerm");
@@ -1778,8 +1719,65 @@ window.addEventListener("message", (event) => {
   input.value = newValue;
 
   search(newValue);
+}
 
-});
+function closeScanner() {
+  const modal = document.getElementById("qrScannerModal");
+  const video = document.getElementById("qrVideo");
+  const footer = document.getElementById("footer");
+  const torchBtn = document.getElementById("torchButton");
+
+  try {
+    if (qrControls) {
+      qrControls.stop();
+      qrControls = null;
+    }
+
+    if (video && video.srcObject) {
+      video.srcObject.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+    }
+  } catch (e) {
+    console.log("Scanner already stopped");
+  }
+
+  currentVideoTrack = null;
+  qrReader = null;
+  qrScanned = false;
+  torchEnabled = false;
+
+  if (torchBtn) {
+    torchBtn.style.display = "none";
+    torchBtn.innerHTML = '<i class="bi bi-lightbulb" style="font-size:30px;"></i><br>Torch Off';
+  }
+
+  if (modal) modal.style.display = "none";
+  if (footer) footer.classList.remove("hide-footer");
+}
+
+async function toggleTorch() {
+  if (!currentVideoTrack) return;
+
+  const torchBtn = document.getElementById("torchButton");
+
+  try {
+    torchEnabled = !torchEnabled;
+
+    await currentVideoTrack.applyConstraints({
+      advanced: [{ torch: torchEnabled }]
+    });
+
+    torchBtn.innerHTML = torchEnabled
+      ? '<i class="bi bi-lightbulb" style="font-size:30px;"></i><br>Torch On'
+      : '<i class="bi bi-lightbulb-off" style="font-size:30px;"></i><br>Torch Off';
+
+  } catch (e) {
+    console.log("Torch failed", e);
+  }
+}       
+
+
+
 
 
          window.addEventListener("scroll", function () {
