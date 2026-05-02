@@ -1,9 +1,6 @@
-// shared.js - GitHub Pages frontend bridge for Cloudflare Workers
-// ================================================================
-// WAJIB TUKAR: letak URL Worker awak di sini.
-// Contoh: https://fyrpc-api.username.workers.dev
-// ================================================================
-const WORKER_API = "https://fyrpc2.iamfyrus.workers.dev";
+
+const WORKER_API = window.APP_CONFIG.WORKER_API;
+
 let firstSearchDone = false;
 let enablePrint = false;
 let scanTimer;
@@ -189,7 +186,6 @@ function clearSearch() {
   }
   hideLoader();
   firstSearchDone = false;
-  loadSummaryCard();
 }
 
 function getCollectByText(a, b) {
@@ -302,7 +298,10 @@ async function collect() {
     }
 
     if (markSound) markSound.play();
-    setTimeout(() => clearSearch(), 5000);
+    setTimeout(() => {
+      clearSearch();
+      loadSummaryCard();
+    }, 5000);
   } catch (err) {
     console.error(err);
     if (resultContainer) resultContainer.innerHTML = '<div style="padding:10px; border:1px solid red; color:red; font-weight:bold;">❌ Collect failed</div>';
@@ -498,6 +497,8 @@ async function collectHold() {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
     if (markSound) markSound.play();
+
+    loadSummaryCard();
 
     setDisplay("modalRemoveBtn", "none");
     setDisplay("modalCollectBtn", "none");
