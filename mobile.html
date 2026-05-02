@@ -458,40 +458,40 @@
 
 
         /* Modal Styles */
-        .modal {
-          display: none; /* Hidden by default */
-          position: fixed; /* Stay in place */
-          z-index: 1000; /* Sit on top */
+   /*     .modal {
+          display: none;
+          position: fixed;
+          z-index: 1000;/
           left: 0;
           top: 0;
-          width: 100%; /* Full width */
-          height: 100%; /* Full height */
-          overflow: hidden; /* Disable scroll */
-          background-color: rgba(0, 0, 0, 0.9); /* Black w/ opacity */
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background-color: rgba(0, 0, 0, 0.9);
         }
 
         .modal-content {
-          position: relative; /* Relative positioning for content */
-          height: 100%; /* Full height */
+          position: relative;
+          height: 100%;
         }
 
         .modal-body {
-          text-align: center; /* Center the QR reader */
-         // height: calc(100% - 60px); /* Adjust for footer height */
-          padding-top: 60px; /* Add padding for space above the scanner */
+          text-align: center;
+         // height: calc(100% - 60px);
+          padding-top: 60px;
         }
 
         .back-button {
-          position: absolute; /* Position the back button */
-          top: 10px; /* Spacing from top */
-          left: 10px; /* Spacing from left */
+          position: absolute;
+          top: 10px;
+          left: 10px;
           background: none;
           border: none;
           cursor: pointer;
-          color: #fff; /* Change color to white */
+          color: #fff;
           font-size: 18px;
           padding-top: 10px;
-          z-index: 1001; /* Ensure the back button is above other elements */
+          z-index: 1001;
         }
 
             .torchToggle {
@@ -508,8 +508,57 @@
               color: white; // #455A64;
               border: none; // solid 0.5px white; // #455A64;
               border-radius: 5px;
-            }
+            } */
 
+
+        /* 🔥 reuse modal style kau */
+        .modal {
+          display:block;
+          position:fixed;
+          inset:0;
+          background:black;
+        }
+
+        .modal-body {
+          text-align:center;
+          padding-top:60px;
+        }
+
+        #reader {
+          width:100%;
+        }
+
+        .back-button {
+          position:absolute;
+          top:10px;
+          left:10px;
+          color:white;
+          font-size:18px;
+          background:none;
+          border:none;
+          z-index:999;
+        }
+
+        .torchToggle {
+          position:absolute;
+          top:70px;
+          left:50%;
+          transform:translateX(-50%);
+          z-index:999;
+          width:150px;
+          height:45px;
+          background:transparent;
+          color:white;
+          border:none;
+        }
+
+        /* hide default UI */
+        #reader__dashboard,
+        #reader__status_span {
+          display:none !important;
+        }
+
+   
 
             .form-container {
               margin-top: 5px;
@@ -983,8 +1032,12 @@
   color: #856404;
 }
 
+</style>
 
-        
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"><\/script>
+
+<style>
 
 /* Overlay full screen */
 #overlay {
@@ -1038,159 +1091,9 @@
 @keyframes spin {
   100% { transform: rotate(360deg); }
 }
+
     
 
-
-/* ===== HTML5 QR MODAL SCANNER UI ===== */
-
-#qrScannerModal {
-  z-index: 99999 !important;
-  background: #000 !important;
-}
-
-.scanner-modal-content {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background: #000;
-  overflow: hidden;
-}
-
-.scanner-modal-body {
-  position: absolute;
-  inset: 0;
-  padding-top: 0 !important;
-  text-align: center;
-  overflow: hidden;
-  background: #000;
-}
-
-#reader {
-  width: 100% !important;
-  height: 100vh !important;
-  background: #000 !important;
-  overflow: hidden !important;
-}
-
-#reader video {
-  width: 100% !important;
-  height: 100vh !important;
-  object-fit: cover !important;
-}
-
-#reader__dashboard,
-#reader__status_span,
-#reader__scan_region img,
-#reader__camera_selection {
-  display: none !important;
-}
-
-#reader__scan_region {
-  background: transparent !important;
-}
-
-.scanner-back-btn {
-  position: absolute;
-  top: 14px;
-  left: 12px;
-  z-index: 50;
-  background: rgba(0,0,0,0.25);
-  color: #fff;
-  border: none;
-  font-size: 17px;
-  padding: 8px 10px;
-  border-radius: 20px;
-  cursor: pointer;
-}
-
-.scanner-live-dot {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 14px;
-  height: 14px;
-  background: #00d26a;
-  border-radius: 50%;
-  z-index: 40;
-  box-shadow: 0 0 10px rgba(0,210,106,0.9);
-}
-
-.scanner-box-ui {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 80vw;
-  max-width: 340px;
-  height: 80vw;
-  max-height: 340px;
-  transform: translate(-50%, -50%);
-  background: rgba(255,255,255,0.20);
-  border: 1px solid rgba(255,255,255,0.28);
-  box-sizing: border-box;
-  z-index: 30;
-  pointer-events: none;
-}
-
-.scanner-line-ui {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 2px;
-  background: #ff3b30;
-  box-shadow: 0 0 8px rgba(255,59,48,0.95);
-}
-
-.scanner-dot-ui {
-  position: absolute;
-  top: 50%;
-  width: 9px;
-  height: 9px;
-  background: #ffb000;
-  border-radius: 50%;
-  transform: translateY(-50%);
-  box-shadow: 0 0 7px rgba(255,176,0,0.9);
-}
-
-.scanner-dot-left {
-  left: -3px;
-}
-
-.scanner-dot-right {
-  right: 55px;
-}
-
-.scanner-error {
-  position: absolute;
-  left: 50%;
-  bottom: 100px;
-  transform: translateX(-50%);
-  width: 85%;
-  max-width: 330px;
-  z-index: 60;
-  color: #fff;
-  font-weight: bold;
-  text-align: center;
-  background: rgba(0,0,0,0.55);
-  padding: 10px 14px;
-  border-radius: 12px;
-}
-
-.scanner-torch-btn {
-  position: absolute !important;
-  left: 50% !important;
-  bottom: 25px !important;
-  top: auto !important;
-  transform: translateX(-50%) !important;
-  z-index: 60 !important;
-  width: 145px !important;
-  height: 55px !important;
-  background: rgba(0,0,0,0.35) !important;
-  color: white !important;
-  border: 1px solid rgba(255,255,255,0.25) !important;
-  border-radius: 12px !important;
-  cursor: pointer !important;
-}
 </style>
 
   <script>
@@ -1213,9 +1116,6 @@ window.__legacyGoogleScriptRun = {
 };
 </script>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-        
 </head>
 <body>
   <div id="uiBlocker"></div>
@@ -1298,13 +1198,14 @@ window.__legacyGoogleScriptRun = {
       <i class="bi bi-arrow-left"></i> Back
     </button>
     <div class="modal-body">
-      <div id="reader" style="width: 100%;"></div>
+      <div id="reader" style="width: 100%;"></div> <!-- QR code scanner container -->
       <div id="errorMessage" style="color: white; font-weight: bold; margin-top: 20%; display: none;"></div>
-    </div>
-    <button id="torchButton" class="torchToggle" onclick="toggleTorch()"></button>
-  </div>
-</div>
-        
+        </div>
+      <button id="torchButton" class="torchToggle" onclick="toggleTorch()">
+            </button>
+            </div>
+          </div>
+
 
 <form style="text-align: left; display: inline-block; position: relative;">
 
@@ -1398,11 +1299,12 @@ window.__legacyGoogleScriptRun = {
             </button>
         </div>
 
-        <div class="floating-button-wrapper">
-            <button id="startButton" onclick="openScannerPopup()">
-                <i class="bi bi-qr-code-scan"></i>
-            </button>
-        </div>
+ 
+          <div class="floating-button-wrapper">
+                <button id="startButton" onclick="openScannerModal()">
+                <i class="bi bi-qr-code"></i> Scan
+                </button>
+          </div>
 
     <!--  <button id="walkinButton" class="walkinButton" type="button" onclick="openWalkinForm()">
         <i class="bi bi-cart-plus" style="font-size: 20px;"></i>
@@ -1731,12 +1633,31 @@ function logoutFromMenu() {
 
 
 <script>
-// NEW QR FUNCTION ONLY FOR MOBILE
+window.html5QrCode = window.html5QrCode || undefined;
+window.torchEnabled = window.torchEnabled || false;
 window.beepSound = window.beepSound || new Audio('https://github.com/fyrus7/FyrusApp/raw/main/media/QRScan.mp3');
 
-var lastScanned = "";
-var lastScanTime = 0;
-var scannedSet = new Set();
+// Function to open the scanner modal
+async function openScannerModal() {
+
+  // reset scan session
+  scannedSet.clear();
+  lastScanned = "";
+  lastScanTime = 0;
+
+  resetTorchState();
+
+  document.getElementById("qrScannerModal").style.display = "block";
+  document.getElementById('footer').classList.add('hide-footer');
+
+  // optional safety stop
+  if (html5QrCode && html5QrCode._isScanning) {
+    await html5QrCode.stop().catch(() => {});
+  }
+
+  startScanner();
+}
+
 
 // Helper: safe set display - new QR code
 function setDisplay(id, value) {
@@ -1752,34 +1673,197 @@ function setText(id, text, isHTML = false) {
   else el.textContent = text;
 }
 
-
-
-// ===== HTML5-QRCODE MODAL SCANNER =====
-window.beepSound = window.beepSound || new Audio('https://github.com/fyrus7/FyrusApp/raw/main/media/QRScan.mp3');
-
 var lastScanned = "";
 var lastScanTime = 0;
 var scannedSet = new Set();
 
-let html5QrCode = null;
-let html5QrRunning = false;
-let torchEnabled = false;
-let scanLocked = false;
+// Function to start the scanner
+async function startScanner() {
+  // Block kalau bukan mobile
+  if (!/Mobi|Android/i.test(navigator.userAgent)) {
+    setText('errorMessage', 'QR Scanner function only works on<br>Smartphone with a back camera.', true);
+    setDisplay('errorMessage', 'block');
+    return;
+  }
 
-function setDisplay(id, value) {
-  const el = document.getElementById(id);
-  if (el && el.style) el.style.display = value;
+  // Reset error message
+  setDisplay('errorMessage', 'none');
+  setText('errorMessage', '');
+
+  if (!html5QrCode) {
+    html5QrCode = new Html5Qrcode("reader");
+  }
+
+  setDisplay('reader', 'block');
+
+  // Start the scanner
+  html5QrCode.start(
+    { facingMode: { exact: "environment" } },
+    { fps: 10, qrbox: { width: 300, height: 300 } },
+(decodedText) => {
+
+  const now = Date.now();
+
+  // anti spam frame
+  if (decodedText === lastScanned && (now - lastScanTime < 1500)) {
+    return;
+  }
+
+  lastScanned = decodedText;
+  lastScanTime = now;
+
+  const input = document.getElementById("searchTerm");
+  if (!input) return;
+
+  const current = input.value.trim();
+
+  let list = current
+    ? current.split(",").map(v => v.trim()).filter(v => v)
+    : [];
+
+  if (scannedSet.has(decodedText)) {
+    return;
+  }
+
+  scannedSet.add(decodedText);
+
+  beepSound?.play();
+  navigator.vibrate?.(100);
+
+  list.push(decodedText);
+
+  const newValue = list.join(", ");
+  input.value = newValue;
+
+  search(newValue);
+
+  // 🔥 CLOSE SCANNER SELEPAS SCAN
+  stopScanner();
+  closeModal();
+},
+    (errorMessage) => {
+      console.log(errorMessage);
+    }
+  ).then(() => {
+    if (isTorchSupported(html5QrCode)) {
+      setDisplay('torchButton', 'inline-block');
+    }
+  }).catch(err => {
+    console.error("Unable to start scanning", err);
+    setText('errorMessage', 'QR Scanner function only works on<br>Smartphone with a back camera.', true);
+    setDisplay('errorMessage', 'block');
+    resetUI?.();
+    stopScanner?.();
+  });
+
+  setDisplay('startButton', 'none');
+  setDisplay('stopButton', 'inline-block');
+
+  setTimeout(() => checkBackCamera?.(), 3000);
 }
 
-function setText(id, text, isHTML = false) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (isHTML) el.innerHTML = text;
-  else el.textContent = text;
+// Check for back camera presence and show alert if none
+async function checkBackCamera() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const backCamera = devices.find(device => device.kind === 'videoinput' && device.label.toLowerCase().includes('back'));
+
+    if (!backCamera) {
+      stopScanner();
+      resetUI();
+    }
+  } catch (error) {
+    console.error('Error checking for back camera:', error);
+  }
 }
 
-// Ini ganti kerja window.addEventListener("message") lama
-function processScannedValue(decodedText) {
+// Function to close the modal
+function closeModal() {
+  setDisplay("qrScannerModal", "none");
+  document.getElementById('footer')?.classList.remove('hide-footer');
+  stopScanner();
+}
+
+// Check if torch is supported
+function isTorchSupported(html5QrCode) {
+  const settings = html5QrCode.getRunningTrackSettings();
+  return "torch" in settings;
+}
+
+// Toggle torch on/off
+async function toggleTorch() {
+  try {
+    if (!torchEnabled) {
+      await html5QrCode.applyVideoConstraints({ advanced: [{ torch: true }] });
+      torchEnabled = true;
+      setText('torchButton', '<i class="bi bi-lightbulb" style="font-size: 30px;"></i><br>Torch is On', true);
+    } else {
+      await html5QrCode.applyVideoConstraints({ advanced: [{ torch: false }] });
+      torchEnabled = false;
+      setText('torchButton', '<i class="bi bi-lightbulb-off" style="font-size: 30px;"></i><br>Torch is Off', true);
+    }
+  } catch (err) {
+    console.error("Failed to toggle torch", err);
+  }
+}
+
+function stopScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => {
+      resetReader();
+      resetUI();
+      resetTorchState();
+    }).catch(err => {
+      console.error("Unable to stop scanning", err);
+      resetReader();
+      resetUI();
+      resetTorchState();
+    });
+  } else {
+    resetReader();
+    resetUI();
+  }
+}
+
+function resetReader() {
+  setDisplay('reader', 'none');
+  if (html5QrCode) {
+    html5QrCode.clear();
+  }
+}
+
+// Reset the torch state and button
+function resetTorchState() {
+  torchEnabled = false;
+  setText('torchButton', '<i class="bi bi-lightbulb-off" style="font-size: 30px;"></i><br>Torch is Off', true);
+  setDisplay('torchButton', 'none');
+}
+
+function resetUI() {
+  setDisplay('startButton', 'inline-block');
+  setDisplay('stopButton', 'none');
+  resetReader();
+}
+
+// Attach event listeners
+document.addEventListener("DOMContentLoaded", function() {
+  const startButton = document.getElementById('startButton');
+  const stopButton = document.getElementById('stopButton');
+  const torchButton = document.getElementById('torchButton');
+  const backButton = document.getElementById('backButton');
+
+  if (startButton && stopButton && torchButton && backButton) {
+    startButton.addEventListener('click', startScanner);
+    stopButton.addEventListener('click', stopScanner);
+    torchButton.addEventListener('click', toggleTorch);
+    backButton.addEventListener('click', closeModal);
+  }
+});
+
+
+window.addEventListener("message", (event) => {
+
+  const decodedText = event.data;
   if (!decodedText) return;
 
   const input = document.getElementById("searchTerm");
@@ -1804,185 +1888,8 @@ function processScannedValue(decodedText) {
   input.value = newValue;
 
   search(newValue);
-}
 
-function openScannerPopup() {
-  scannedSet.clear();
-  lastScanned = "";
-  lastScanTime = 0;
-  scanLocked = false;
-  torchEnabled = false;
-
-  const modal = document.getElementById("qrScannerModal");
-  const reader = document.getElementById("reader");
-  const errorMessage = document.getElementById("errorMessage");
-  const torchButton = document.getElementById("torchButton");
-  const footer = document.getElementById("footer");
-
-  if (!modal || !reader) {
-    alert("Scanner modal/reader not found");
-    return;
-  }
-
-  if (!window.Html5Qrcode) {
-    alert("html5-qrcode library not loaded");
-    return;
-  }
-
-  if (errorMessage) {
-    errorMessage.style.display = "none";
-    errorMessage.innerText = "";
-  }
-
-  if (torchButton) {
-    torchButton.style.display = "none";
-    torchButton.innerHTML = '<i class="bi bi-lightbulb-off" style="font-size:26px;"></i><br>Torch Off';
-  }
-
-  modal.style.display = "block";
-  if (footer) footer.classList.add("hide-footer");
-
-  // Bersihkan reader kalau ada tinggalan lama
-  reader.innerHTML = "";
-
-  html5QrCode = new Html5Qrcode("reader");
-
-  const qrSize = Math.min(window.innerWidth * 0.8, 340);
-
-  const config = {
-    fps: 10,
-    qrbox: {
-      width: Math.floor(qrSize),
-      height: Math.floor(qrSize)
-    },
-    aspectRatio: window.innerWidth / window.innerHeight
-  };
-
-  html5QrCode.start(
-    { facingMode: "environment" },
-    config,
-    function(decodedText) {
-      if (!decodedText) return;
-      if (scanLocked) return;
-
-      scanLocked = true;
-
-      processScannedValue(decodedText);
-
-      setTimeout(function() {
-        closeModal();
-      }, 150);
-    },
-    function(errorMessage) {
-      // ignore scan fail frame by frame
-    }
-  ).then(function() {
-    html5QrRunning = true;
-
-    setTimeout(function() {
-      if (isTorchSupported() && torchButton) {
-        torchButton.style.display = "block";
-      }
-    }, 700);
-
-  }).catch(function(err) {
-    console.error("Camera start failed:", err);
-
-    if (errorMessage) {
-      errorMessage.style.display = "block";
-      errorMessage.innerText = "Camera blocked / scanner failed";
-    }
-  });
-}
-
-function isTorchSupported() {
-  try {
-    if (!html5QrCode || !html5QrRunning) return false;
-
-    const settings = html5QrCode.getRunningTrackSettings();
-    return settings && ("torch" in settings);
-  } catch (e) {
-    return false;
-  }
-}
-
-function closeScanner() {
-  const modal = document.getElementById("qrScannerModal");
-  const reader = document.getElementById("reader");
-  const footer = document.getElementById("footer");
-  const torchButton = document.getElementById("torchButton");
-
-  const finishClose = function() {
-    html5QrRunning = false;
-    html5QrCode = null;
-    scanLocked = false;
-    torchEnabled = false;
-
-    if (reader) reader.innerHTML = "";
-
-    if (torchButton) {
-      torchButton.style.display = "none";
-      torchButton.innerHTML = '<i class="bi bi-lightbulb-off" style="font-size:26px;"></i><br>Torch Off';
-    }
-
-    if (modal) modal.style.display = "none";
-    if (footer) footer.classList.remove("hide-footer");
-  };
-
-  if (html5QrCode && html5QrRunning) {
-    html5QrCode.stop()
-      .then(function() {
-        try {
-          return html5QrCode.clear();
-        } catch (e) {
-          return null;
-        }
-      })
-      .then(function() {
-        finishClose();
-      })
-      .catch(function(err) {
-        console.log("Scanner stop error:", err);
-        finishClose();
-      });
-  } else {
-    finishClose();
-  }
-}
-
-function closeModal() {
-  closeScanner();
-}
-
-function toggleTorch() {
-  const btn = document.getElementById("torchButton");
-
-  if (!html5QrCode || !html5QrRunning || !btn) return;
-
-  try {
-    torchEnabled = !torchEnabled;
-
-    html5QrCode.applyVideoConstraints({
-      advanced: [{ torch: torchEnabled }]
-    });
-
-    btn.innerHTML = torchEnabled
-      ? '<i class="bi bi-lightbulb" style="font-size:26px;"></i><br>Torch On'
-      : '<i class="bi bi-lightbulb-off" style="font-size:26px;"></i><br>Torch Off';
-
-  } catch (e) {
-    console.log("Torch toggle failed:", e);
-  }
-}
-
-document.addEventListener("visibilitychange", function() {
-  if (document.hidden) {
-    closeScanner();
-  }
-});  
-        
-
-
+});
 
 
          window.addEventListener("scroll", function () {
