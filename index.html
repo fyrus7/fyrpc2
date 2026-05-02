@@ -218,13 +218,8 @@
   </div>
 
 <script>
-// ======================================================
-// Cloudflare Worker API
-// Pastikan URL ini sama dengan Worker yang working.
-// Jangan letak slash belakang.
-// ======================================================
-const WORKER_API = "https://fyrpc2.iamfyrus.workers.dev";
-
+const WORKER_API = window.APP_CONFIG.WORKER_API;
+ 
 let isLoggingIn = false;
 
 function cleanApiBase() {
