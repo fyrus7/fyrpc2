@@ -497,8 +497,7 @@ async function collectHold() {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
     if (markSound) markSound.play();
-
-    loadSummaryCard();
+    
 
     setDisplay("modalRemoveBtn", "none");
     setDisplay("modalCollectBtn", "none");
@@ -516,6 +515,8 @@ async function collectHold() {
         okBtn.style.display = "none";
         setDisplay("modalRemoveBtn", "inline-block");
         setDisplay("modalCollectBtn", "inline-block");
+
+        loadSummaryCard();
       };
     }
   } catch (err) {
