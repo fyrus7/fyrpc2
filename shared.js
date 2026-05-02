@@ -803,10 +803,40 @@ async function validateProtectedPage() {
   syncCollectButton();
 }
 
+
+// Hide endpoint url
+function getCurrentPageName() {
+  return window.location.pathname.split("/").pop().toLowerCase();
+}
+
+function isProtectedPage() {
+  const page = getCurrentPageName();
+  return ["mobile.html", "desktop.html", "admin.html", "monitor.html"].includes(page);
+}
+
+function isManualReload() {
+  const nav = performance.getEntriesByType("navigation")[0];
+  return nav && nav.type === "reload";
+}
+
+function hideProtectedPageUrl() {
+  if (!isProtectedPage()) return;
+
+  // Change URL from /mobile.html to root folder /
+  // Example: https://domain.com/mobile.html -> https://domain.com/
+  history.replaceState(null, "", "./");
+}
+
 // Override Apps Script page onload before it fires.
 window.onload = null;
-loadSummaryCard();
-window.addEventListener("load", validateProtectedPage);
+if (isProtectedPage() && isManualReload()) {
+  window.location.replace("index.html");
+} else {
+  hideProtectedPageUrl();
+  loadSummaryCard();
+  window.addEventListener("load", validateProtectedPage);
+}
+
 
 window.addEventListener("storage", function(e) {
   if (e.key === "sessionToken" && !e.newValue) loadLogin();
