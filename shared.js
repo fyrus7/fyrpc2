@@ -276,7 +276,13 @@ async function collect() {
   try {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
-
+// new data line
+    const printData = getSelectedPrintData(selected);
+    
+    const collectSummary = printData.map(item =>
+      `${item.valueBIB} ${item.valueSIZE ? "(" + item.valueSIZE + ")" : ""}`
+    );
+// new data end
     if (resultContainer) {
       resultContainer.innerHTML = '<div style="padding:10px; border:1px solid green; color:green; font-weight:bold;">✅ SUCCESSFULL</div>';
     }
@@ -302,7 +308,7 @@ async function collect() {
  //     clearSearch();
  //     loadSummaryCard();
 //    }, 5000);
-    showCollectSuccessCard(() => {
+    showCollectSuccessCard(collectSummary, () => {
       clearSearch();
       loadSummaryCard();
     });
