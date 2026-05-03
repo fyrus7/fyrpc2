@@ -322,28 +322,73 @@ async function collect() {
 }
 
 // AFTER COLLECT RESULT CARD
-function showCollectSuccessCard(dataList, onOk) {
+function showCollectSuccessCard(dataList, onDismiss) {
   const resultContainer = safeEl("result");
   if (!resultContainer) return;
 
-  const listHtml = (dataList || [])
-    .map(item => `<div style="font-size:14px;margin:3px 0;">${item}</div>`)
-    .join("");
+  const items = (dataList || []).map(item => {
+    // expected format: "NAME BIB (SIZE)" OR similar fallback
+    let name = "";
+    let bib = "";
+    let size = "";
+
+    const sizeMatch = item.match(/\((.*?)\)/);
+    if (sizeMatch) size = sizeMatch[1];
+
+    const cleaned = item.replace(/\(.*?\)/g, "").trim();
+    const parts = cleaned.split(" ");
+
+    if (parts.length >= 2) {
+      bib = parts[parts.length - 1];
+      name = parts.slice(0, -1).join(" ");
+    } else {
+      name = cleaned;
+    }
+
+    return `
+      <div style="
+        padding:8px 0;
+        border-bottom:1px solid rgba(0,0,0,0.08);
+      ">
+
+        <!-- LINE 1: NAME -->
+        <div style="
+          text-align:left;
+          font-size:14px;
+          font-weight:600;
+        ">
+          ${name}
+        </div>
+
+        <!-- LINE 2: BIB LEFT / SIZE RIGHT -->
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          font-size:12px;
+          opacity:0.8;
+        ">
+          <span>${bib}</span>
+          <span>${size}</span>
+        </div>
+
+      </div>
+    `;
+  }).join("");
 
   resultContainer.innerHTML = `
-    <div style="
+    <div id="collectSuccessCard" style="
       padding:15px;
       border:2px solid #28a745;
       background:#eaffea;
       color:#1b5e20;
       font-weight:bold;
-      text-align:center;
       border-radius:10px;
       box-shadow:0 6px 18px rgba(0,0,0,0.15);
       margin-top:10px;
+      cursor:pointer;
     ">
 
-      <div style="font-size:18px;margin-bottom:10px;">
+      <div style="font-size:18px;margin-bottom:10px;text-align:center;">
         ✅ SUCCESSFULLY COLLECTED
       </div>
 
@@ -351,30 +396,35 @@ function showCollectSuccessCard(dataList, onOk) {
         background:#ffffffaa;
         padding:10px;
         border-radius:8px;
-        margin-bottom:12px;
+        margin-bottom:8px;
         font-weight:normal;
       ">
-        ${listHtml}
+        ${items}
       </div>
 
-      <button id="collectOkBtn" style="
-        padding:8px 18px;
-        border:none;
-        border-radius:20px;
-        background:linear-gradient(135deg,#6f42c1,#e83e8c);
-        color:white;
-        cursor:pointer;
-        font-weight:bold;
+      <div style="
+        font-size:11px;
+        text-align:right;
+        opacity:0.7;
       ">
-        OK
-      </button>
+        dismiss
+      </div>
+
     </div>
   `;
 
-  document.getElementById("collectOkBtn").onclick = () => {
-    onOk?.();
+  const card = document.getElementById("collectSuccessCard");
+
+  const dismiss = () => onDismiss?.();
+
+  card.onclick = dismiss;
+
+  card.querySelector("div:last-child").onclick = (e) => {
+    e.stopPropagation();
+    dismiss();
   };
 }
+
 
 
 function togglePrint() {
