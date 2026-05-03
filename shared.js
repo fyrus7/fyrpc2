@@ -280,7 +280,7 @@ async function collect() {
     const printData = getSelectedPrintData(selected);
     
     const collectSummary = printData.map(item =>
-      `${item.valueNAME} ${item.valueBIB} (${item.valueSIZE})`
+      `${item.valueBIB} ${item.valueSIZE ? "(" + item.valueSIZE + ")" : ""}`.trim()
     );
 // new data end
     if (resultContainer) {
@@ -327,8 +327,6 @@ function showCollectSuccessCard(dataList, onDismiss) {
   if (!resultContainer) return;
 
   const items = (dataList || []).map(item => {
-    // expected format: "NAME BIB (SIZE)" OR similar fallback
-    let name = "";
     let bib = "";
     let size = "";
 
@@ -338,39 +336,16 @@ function showCollectSuccessCard(dataList, onDismiss) {
     const cleaned = item.replace(/\(.*?\)/g, "").trim();
     const parts = cleaned.split(" ");
 
-    if (parts.length >= 2) {
-      bib = parts[parts.length - 1];
-      name = parts.slice(0, -1).join(" ");
-    } else {
-      name = cleaned;
-    }
+    bib = parts.join(" ");
 
     return `
       <div style="
         padding:8px 0;
         border-bottom:1px solid rgba(0,0,0,0.08);
+        font-size:16px;
+        font-weight:700;
       ">
-
-        <!-- LINE 1: NAME -->
-        <div style="
-          text-align:left;
-          font-size:14px;
-          font-weight:600;
-        ">
-          ${name}
-        </div>
-
-        <!-- LINE 2: BIB LEFT / SIZE RIGHT -->
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          font-size:12px;
-          opacity:0.8;
-        ">
-          <span>${bib}</span>
-          <span>${size}</span>
-        </div>
-
+        ${bib} ${size ? `<span style="opacity:0.7;font-weight:600;">(${size})</span>` : ""}
       </div>
     `;
   }).join("");
@@ -381,14 +356,13 @@ function showCollectSuccessCard(dataList, onDismiss) {
       border:2px solid #28a745;
       background:#eaffea;
       color:#1b5e20;
-      font-weight:bold;
       border-radius:10px;
       box-shadow:0 6px 18px rgba(0,0,0,0.15);
       margin-top:10px;
       cursor:pointer;
     ">
 
-      <div style="font-size:18px;margin-bottom:10px;text-align:center;">
+      <div style="font-size:18px;margin-bottom:10px;text-align:center;font-weight:bold;">
         ✅ SUCCESSFULLY COLLECTED
       </div>
 
@@ -397,7 +371,6 @@ function showCollectSuccessCard(dataList, onDismiss) {
         padding:10px;
         border-radius:8px;
         margin-bottom:8px;
-        font-weight:normal;
       ">
         ${items}
       </div>
