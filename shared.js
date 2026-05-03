@@ -322,34 +322,6 @@ async function collect() {
 }
 
 // AFTER COLLECT RESULT CARD
-function normalizeSize(size) {
-  if (!size) return null;
-
-  let s = size.toUpperCase().replace(/\s+/g, "");
-
-  // ❌ ignore invalid only
-  if (["NIL", "N/A", "NA", "-"].includes(s)) return null;
-
-  // clean weird formatting
-  const cleaned = s.replace(/[^A-Z]/g, "");
-
-  const map = {
-    "XXXS": "3XS",
-    "XXS": "2XS",
-    "XS": "XS",
-    "S": "S",
-    "M": "M",
-    "L": "L",
-    "XL": "XL",
-    "XXL": "2XL",
-    "XXXL": "3XL",
-    "XXXXL": "4XL"
-  };
-
-  return map[cleaned] || size;
-}
-
-
 function showCollectSuccessCard(dataList, onDismiss) {
   const resultContainer = safeEl("result");
   if (!resultContainer) return;
@@ -361,15 +333,16 @@ function showCollectSuccessCard(dataList, onDismiss) {
     let size = "";
 
     const match = item.match(/\((.*?)\)/);
-    if (match) size = match[1]?.trim();
+    if (match) size = (match[1] || "").trim();
 
     const cleaned = item.replace(/\(.*?\)/g, "").trim();
     bib = cleaned;
 
-    const normSize = normalizeSize(size);
+    const s = size.toLowerCase();
 
-    if (normSize) {
-      sizeMap[normSize] = (sizeMap[normSize] || 0) + 1;
+    // COUNT SIZE (ignore invalid)
+    if (size && !["na", "n/a", "nil", "-"].includes(s)) {
+      sizeMap[size] = (sizeMap[size] || 0) + 1;
     }
 
     return `
@@ -387,7 +360,10 @@ function showCollectSuccessCard(dataList, onDismiss) {
     `;
   }).join("");
 
-  const sizeKeys = Object.keys(sizeMap);
+  // SORT SIZE (AUTO SMART)
+  const sizeKeys = Object.keys(sizeMap)
+    .filter(k => k && !["na", "n/a", "nil", "-"].includes(k.toLowerCase()))
+    .sort((a, b) => getSizeValue(a) - getSizeValue(b));
 
   let summaryText = "No Size";
 
@@ -415,7 +391,7 @@ function showCollectSuccessCard(dataList, onDismiss) {
         text-align:center;
         font-weight:bold;
       ">
-        ✅ SUCCESSFULLY COLLECTED
+        SUCCESSFULLY COLLECTED
       </div>
 
       <div style="
@@ -441,6 +417,7 @@ function showCollectSuccessCard(dataList, onDismiss) {
         text-align:right;
         opacity:0.7;
         margin-top:6px;
+        cursor:pointer;
       ">
         dismiss
       </div>
@@ -460,6 +437,36 @@ function showCollectSuccessCard(dataList, onDismiss) {
   };
 }
 
+function getSizeValue(size) {
+  if (!size) return 999;
+
+  let s = size.toUpperCase().replace(/\s+/g, "");
+
+  const base = {
+    "XXXS": 1,
+    "XXS": 2,
+    "XS": 3,
+    "S": 4,
+    "M": 5,
+    "L": 6,
+    "XL": 7,
+    "XXL": 8,
+    "XXXL": 9
+  };
+
+  if (base[s]) return base[s];
+
+  const match = s.match(/^(\d+)?(XS|XL)$/);
+  if (match) {
+    const num = parseInt(match[1] || "1", 10);
+    const type = match[2];
+
+    if (type === "XS") return 2 - num;
+    if (type === "XL") return 7 + (num - 1);
+  }
+
+  return 1000; // kids / numeric / unknown last
+}
 
 
 function togglePrint() {
