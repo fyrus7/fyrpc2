@@ -322,12 +322,16 @@ async function collect() {
 }
 
 // AFTER COLLECT RESULT CARD
-function showCollectSuccessCard(onOk) {
+function showCollectSuccessCard(dataList, onOk) {
   const resultContainer = safeEl("result");
   if (!resultContainer) return;
 
+  const listHtml = (dataList || [])
+    .map(item => `<div style="font-size:14px;margin:3px 0;">${item}</div>`)
+    .join("");
+
   resultContainer.innerHTML = `
-    <div id="collectSuccessCard" style="
+    <div style="
       padding:15px;
       border:2px solid #28a745;
       background:#eaffea;
@@ -338,8 +342,19 @@ function showCollectSuccessCard(onOk) {
       box-shadow:0 6px 18px rgba(0,0,0,0.15);
       margin-top:10px;
     ">
+
       <div style="font-size:18px;margin-bottom:10px;">
         ✅ SUCCESSFULLY COLLECTED
+      </div>
+
+      <div style="
+        background:#ffffffaa;
+        padding:10px;
+        border-radius:8px;
+        margin-bottom:12px;
+        font-weight:normal;
+      ">
+        ${listHtml}
       </div>
 
       <button id="collectOkBtn" style="
@@ -356,9 +371,7 @@ function showCollectSuccessCard(onOk) {
     </div>
   `;
 
-  const btn = document.getElementById("collectOkBtn");
-
-  btn.onclick = () => {
+  document.getElementById("collectOkBtn").onclick = () => {
     onOk?.();
   };
 }
