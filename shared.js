@@ -298,10 +298,14 @@ async function collect() {
     }
 
     if (markSound) markSound.play();
-    setTimeout(() => {
+ //   setTimeout(() => {
+ //     clearSearch();
+ //     loadSummaryCard();
+//    }, 5000);
+    showCollectSuccessCard(() => {
       clearSearch();
       loadSummaryCard();
-    }, 5000);
+    });
   } catch (err) {
     console.error(err);
     if (resultContainer) resultContainer.innerHTML = '<div style="padding:10px; border:1px solid red; color:red; font-weight:bold;">❌ Collect failed</div>';
@@ -310,6 +314,49 @@ async function collect() {
     setAllButtonsDisabled(false);
   }
 }
+
+// AFTER COLLECT RESULT CARD
+function showCollectSuccessCard(onOk) {
+  const resultContainer = safeEl("result");
+  if (!resultContainer) return;
+
+  resultContainer.innerHTML = `
+    <div id="collectSuccessCard" style="
+      padding:15px;
+      border:2px solid #28a745;
+      background:#eaffea;
+      color:#1b5e20;
+      font-weight:bold;
+      text-align:center;
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.15);
+      margin-top:10px;
+    ">
+      <div style="font-size:18px;margin-bottom:10px;">
+        ✅ SUCCESSFULLY COLLECTED
+      </div>
+
+      <button id="collectOkBtn" style="
+        padding:8px 18px;
+        border:none;
+        border-radius:20px;
+        background:linear-gradient(135deg,#6f42c1,#e83e8c);
+        color:white;
+        cursor:pointer;
+        font-weight:bold;
+      ">
+        OK
+      </button>
+    </div>
+  `;
+
+  const btn = document.getElementById("collectOkBtn");
+
+  btn.onclick = () => {
+    onOk?.();
+  };
+}
+
 
 function togglePrint() {
   enablePrint = !enablePrint;
