@@ -1664,7 +1664,7 @@ function logoutFromMenu() {
 <script>
 window.html5QrCode = window.html5QrCode || undefined;
 window.torchEnabled = window.torchEnabled || false;
-window.beepSound = window.beepSound = new Audio('Media/Sound/QRScan.mp3');
+window.beepSound = window.beepSound || new Audio('Media/Sound/QRScan.mp3');
 
 // Function to open the scanner modal
 async function openScannerModal() {
