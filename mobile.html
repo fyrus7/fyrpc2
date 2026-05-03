@@ -1060,7 +1060,9 @@
   color: #856404;
 }
 
-</style>  
+</style>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">  
 
 <style>
 
@@ -1121,9 +1123,6 @@
 
 </style>
 
-        <link rel="stylesheet" href="Bootstrap/bootstrap-icons.min.css">
-
-        
   <script>
 window.__legacyGoogleScriptRun = {
   withSuccessHandler: function(){ return this; },
@@ -1472,11 +1471,11 @@ window.__legacyGoogleScriptRun = {
 
   <!------------- BODY SECTION ------------->
 
-  <audio id="markSound" src="Sound/collected.mp3"></audio>
-  <audio id="warnSound" src="Sound/warning.mp3"></audio>
-  <audio id="successSound" src="Sound/tada.mp3"></audio>
-      
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <audio id="markSound" src="https://raw.githubusercontent.com/fyrus7/sound/main/collected.mp3" preload="auto"></audio>
+  <audio id="warnSound" src="https://raw.githubusercontent.com/fyrus7/sound/main/warning.mp3" preload="auto"></audio>
+  <audio id="successSound" src="https://raw.githubusercontent.com/fyrus7/lsptk25/main/tada.mp3" preload="auto"></audio>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"><\/script>
 
 <script>
   function showLoader() {
@@ -1665,7 +1664,7 @@ function logoutFromMenu() {
 <script>
 window.html5QrCode = window.html5QrCode || undefined;
 window.torchEnabled = window.torchEnabled || false;
-window.beepSound = window.beepSound || window.beepSound = new Audio('Sound/media_QRScan.mp3');
+window.beepSound = window.beepSound || new Audio('https://github.com/fyrus7/FyrusApp/raw/main/media/QRScan.mp3');
 
 // Function to open the scanner modal
 async function openScannerModal() {
