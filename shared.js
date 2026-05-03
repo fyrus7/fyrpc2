@@ -365,9 +365,9 @@ function showCollectSuccessCard(dataList, onDismiss) {
     .filter(k => k && !["na", "n/a", "nil", "-"].includes(k.toLowerCase()))
     .sort((a, b) => getSizeValue(a) - getSizeValue(b));
 
-  let summaryText = "No Size";
+  let summaryText = "";
 
-  if (sizeKeys.length > 0) {
+  if (sizeKeys.length > 1) {
     summaryText = sizeKeys
       .map(k => `${k} (${sizeMap[k]})`)
       .join(" / ");
@@ -408,7 +408,7 @@ function showCollectSuccessCard(dataList, onDismiss) {
           font-weight:700;
           opacity:0.85;
         ">
-          ${summaryText}
+          ${summaryText ? summaryText : ""}
         </div>
       </div>
 
