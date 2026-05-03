@@ -205,8 +205,10 @@ function normalizeCollectRows(rows) {
 
 function getSelectedPrintData(selectedCards) {
   return Array.from(selectedCards).map(card => ({
-    valueBIB: card.querySelector(".bib-number")?.textContent?.trim() || "",
-    valueSIZE: (card.querySelector(".bib-size")?.textContent || "").replace(/^\s*\/\s*/, "").trim()
+    valueBIB: card.querySelector(".bib-number")?.textContent?.trim() || "-",
+    valueSIZE: (card.querySelector(".bib-size")?.textContent || "")
+      .replace(/^\s*\/\s*/, "")
+      .trim()
   }));
 }
 
@@ -267,8 +269,6 @@ async function collect() {
   }));
 
   if (!markedRows.length) return;
-
-  const printData = getSelectedPrintData(selected);
 
   setAllButtonsDisabled(true);
   if (collectButton) collectButton.value = "Collecting...";
@@ -640,12 +640,12 @@ function removeSingleHold(rowId) {
 
 // NEW HOLD SIZE SORT HELPER
 function extractHoldData(container) {
-  const rows = container.querySelectorAll(".hold-item");
+  const rows = container.querySelectorAll("[data-row]");
 
   const result = [];
 
   rows.forEach(row => {
-    const bib = row.querySelector(".bib-number")?.textContent?.trim() || "";
+    const bib = row.querySelector(".bib-number")?.textContent?.trim() || "-";
     const sizeRaw = row.querySelector(".bib-size")?.textContent || "";
     const size = sizeRaw.replace(/^\s*\/\s*/, "").trim();
 
@@ -687,9 +687,7 @@ async function collectHold() {
         `${d.bib} ${d.size ? "(" + d.size + ")" : ""}`
       );
     }
-   // EXTRACT END 
-
-    setDisplay("modalRemoveBtn", "none");
+   // EXTRACT END
 
     setDisplay("holdModal", "none");
     
