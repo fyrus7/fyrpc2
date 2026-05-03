@@ -326,29 +326,48 @@ function showCollectSuccessCard(dataList, onDismiss) {
   const resultContainer = safeEl("result");
   if (!resultContainer) return;
 
+  const sizeMap = {};
+
   const items = (dataList || []).map(item => {
     let bib = "";
     let size = "";
 
-    const sizeMatch = item.match(/\((.*?)\)/);
-    if (sizeMatch) size = sizeMatch[1];
+    const match = item.match(/\((.*?)\)/);
+    if (match) size = match[1]?.trim();
 
     const cleaned = item.replace(/\(.*?\)/g, "").trim();
-    const parts = cleaned.split(" ");
+    bib = cleaned;
 
-    bib = parts.join(" ");
+    // COUNT SIZE
+    if (size && size.toLowerCase() !== "na" && size.toLowerCase() !== "n/a") {
+      sizeMap[size] = (sizeMap[size] || 0) + 1;
+    }
 
     return `
       <div style="
-        padding:8px 0;
-        border-bottom:1px solid rgba(0,0,0,0.08);
-        font-size:16px;
-        font-weight:700;
+        display:flex;
+        justify-content:space-between;
+        padding:6px 0;
+        border-bottom:1px solid rgba(0,0,0,0.06);
+        font-size:15px;
+        font-weight:600;
       ">
-        ${bib} ${size ? `<span style="opacity:0.7;font-weight:600;">(${size})</span>` : ""}
+        <span>${bib}</span>
+        <span style="opacity:0.7;">${size || "-"}</span>
       </div>
     `;
   }).join("");
+
+  // BUILD SUMMARY
+  const sizeKeys = Object.keys(sizeMap);
+
+  let summaryText = "No Size";
+
+  if (sizeKeys.length > 0) {
+    summaryText = sizeKeys
+      .map(k => `${k} (${sizeMap[k]})`)
+      .join(" / ");
+  }
 
   resultContainer.innerHTML = `
     <div id="collectSuccessCard" style="
@@ -370,15 +389,25 @@ function showCollectSuccessCard(dataList, onDismiss) {
         background:#ffffffaa;
         padding:10px;
         border-radius:8px;
-        margin-bottom:8px;
       ">
         ${items}
+
+        <div style="
+          margin-top:10px;
+          text-align:right;
+          font-size:12px;
+          font-weight:700;
+          opacity:0.85;
+        ">
+          ${summaryText}
+        </div>
       </div>
 
       <div style="
         font-size:11px;
         text-align:right;
         opacity:0.7;
+        margin-top:6px;
       ">
         dismiss
       </div>
@@ -396,7 +425,7 @@ function showCollectSuccessCard(dataList, onDismiss) {
     e.stopPropagation();
     dismiss();
   };
-}
+}a
 
 
 
