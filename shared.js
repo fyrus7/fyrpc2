@@ -637,6 +637,28 @@ function removeSingleHold(rowId) {
   syncCollectButton();
 }
 
+
+// NEW HOLD SIZE SORT HELPER
+function extractHoldData(container) {
+  const rows = container.querySelectorAll(".hold-item");
+
+  const result = [];
+
+  rows.forEach(row => {
+    const bib = row.querySelector(".bib-number")?.textContent?.trim() || "";
+    const sizeRaw = row.querySelector(".bib-size")?.textContent || "";
+    const size = sizeRaw.replace(/^\s*\/\s*/, "").trim();
+
+    result.push({
+      bib,
+      size
+    });
+  });
+
+  return result;
+}
+// HELPER END
+
 async function collectHold() {
   const holdData = getHoldData();
   if (!holdData.rows.length) return;
@@ -655,28 +677,29 @@ async function collectHold() {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
     if (markSound) markSound.play();
-    
+// NEE HOLD SIZE EXTRACT
+    const holdListEl = safeEl("holdList");    
+    let dataList = [];    
+    if (holdListEl) {
+      const extracted = extractHoldData(holdListEl);
+      
+      dataList = extracted.map(d =>
+        `${d.bib} ${d.size ? "(" + d.size + ")" : ""}`
+      );
+    }
+   // EXTRACT END 
 
     setDisplay("modalRemoveBtn", "none");
-    setDisplay("modalCollectBtn", "none");
-    const holdList = safeEl("holdList");
-    if (holdList) {
-      holdList.innerHTML = `<div style="padding:10px;border:1px solid green;background:#e8f5e9;color:#2e7d32;font-weight:bold;text-align:center;margin-bottom:8px;">SUCCESSFULL</div>${holdList.innerHTML}`;
-    }
 
-    const okBtn = safeEl("modalOkBtn");
-    if (okBtn) {
-      okBtn.style.display = "inline-block";
-      okBtn.onclick = function() {
-        setDisplay("holdModal", "none");
-        removeHold();
-        okBtn.style.display = "none";
-        setDisplay("modalRemoveBtn", "inline-block");
-        setDisplay("modalCollectBtn", "inline-block");
+    setDisplay("holdModal", "none");
+    
+    showCollectSuccessCard(dataList, () => {
+      removeHold();
+      loadSummaryCard();
+    });
+    // extract end
 
-        loadSummaryCard();
-      };
-    }
+    
   } catch (err) {
     console.error(err);
     alert("Collect hold failed");
