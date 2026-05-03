@@ -276,7 +276,7 @@ async function collect() {
   try {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
-// new data line
+// new data line pass to collect result card
     const printData = getSelectedPrintData(selected);
     
     const collectSummary = printData.map(item =>
@@ -322,6 +322,34 @@ async function collect() {
 }
 
 // AFTER COLLECT RESULT CARD
+function normalizeSize(size) {
+  if (!size) return null;
+
+  let s = size.toUpperCase().replace(/\s+/g, "");
+
+  // ❌ ignore invalid only
+  if (["NIL", "N/A", "NA", "-"].includes(s)) return null;
+
+  // clean weird formatting
+  const cleaned = s.replace(/[^A-Z]/g, "");
+
+  const map = {
+    "XXXS": "3XS",
+    "XXS": "2XS",
+    "XS": "XS",
+    "S": "S",
+    "M": "M",
+    "L": "L",
+    "XL": "XL",
+    "XXL": "2XL",
+    "XXXL": "3XL",
+    "XXXXL": "4XL"
+  };
+
+  return map[cleaned] || size;
+}
+
+
 function showCollectSuccessCard(dataList, onDismiss) {
   const resultContainer = safeEl("result");
   if (!resultContainer) return;
@@ -338,9 +366,10 @@ function showCollectSuccessCard(dataList, onDismiss) {
     const cleaned = item.replace(/\(.*?\)/g, "").trim();
     bib = cleaned;
 
-    // COUNT SIZE
-    if (size && size.toLowerCase() !== "na" && size.toLowerCase() !== "n/a") {
-      sizeMap[size] = (sizeMap[size] || 0) + 1;
+    const normSize = normalizeSize(size);
+
+    if (normSize) {
+      sizeMap[normSize] = (sizeMap[normSize] || 0) + 1;
     }
 
     return `
@@ -358,7 +387,6 @@ function showCollectSuccessCard(dataList, onDismiss) {
     `;
   }).join("");
 
-  // BUILD SUMMARY
   const sizeKeys = Object.keys(sizeMap);
 
   let summaryText = "No Size";
@@ -381,7 +409,12 @@ function showCollectSuccessCard(dataList, onDismiss) {
       cursor:pointer;
     ">
 
-      <div style="font-size:18px;margin-bottom:10px;text-align:center;font-weight:bold;">
+      <div style="
+        font-size:18px;
+        margin-bottom:10px;
+        text-align:center;
+        font-weight:bold;
+      ">
         ✅ SUCCESSFULLY COLLECTED
       </div>
 
@@ -425,7 +458,7 @@ function showCollectSuccessCard(dataList, onDismiss) {
     e.stopPropagation();
     dismiss();
   };
-}a
+}
 
 
 
