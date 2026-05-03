@@ -280,7 +280,7 @@ async function collect() {
     const printData = getSelectedPrintData(selected);
     
     const collectSummary = printData.map(item =>
-      `${item.valueBIB} ${item.valueSIZE ? "(" + item.valueSIZE + ")" : ""}`
+      `${item.valueNAME} ${item.valueBIB} (${item.valueSIZE})`
     );
 // new data end
     if (resultContainer) {
