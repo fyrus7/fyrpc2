@@ -1254,169 +1254,231 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-  function cleanApiBase() {
-    return String(WORKER_API || "").replace(/\/+$/, "");
-  }
-
-  async function apiJson(path, options = {}) {
-    const res = await fetch(`${cleanApiBase()}${path}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {})
-      }
-    });
-
-    const raw = await res.text();
-
-    let data;
-    try {
-      data = JSON.parse(raw);
-    } catch (e) {
-      throw new Error(raw || `HTTP ${res.status}`);
+    function cleanApiBase() {
+      return String(WORKER_API || "").replace(/\/+$/, "");
     }
 
-    if (!res.ok) {
-      throw new Error(JSON.stringify(data));
-    }
-
-    return data;
-  }
-
-  function showLoader() {
-    const spinner = document.getElementById("globalSpinner");
-
-    if (spinner) {
-      spinner.style.display = "flex";
-    }
-
-    blockUI(true);
-  }
-
-  function hideLoader() {
-    const spinner = document.getElementById("globalSpinner");
-
-    if (spinner) {
-      spinner.style.display = "none";
-    }
-
-    blockUI(false);
-  }
-
-  function blockUI(state) {
-    const blocker = document.getElementById("uiBlocker");
-
-    if (blocker) {
-      blocker.style.display = state ? "block" : "none";
-    }
-  }
-
-  function setAllButtonsDisabled(state) {
-    document
-      .querySelectorAll("button, input[type=button]")
-      .forEach(btn => {
-        btn.disabled = state;
-      });
-  }
-
-  function isMobileDevice() {
-    const ua = navigator.userAgent || navigator.vendor || window.opera || "";
-
-    return (
-      /android|iphone|ipad|ipod|iemobile|opera mini|mobile/i.test(ua) ||
-      window.innerWidth <= 768 ||
-      window.matchMedia("(pointer: coarse)").matches
-    );
-  }
-
-  function routeDashboardPage() {
-    window.location.href = isMobileDevice()
-      ? "mobile.html"
-      : "desktop.html";
-  }
-
-  function requireLogin() {
-    const token = localStorage.getItem("sessionToken");
-    const profile = localStorage.getItem("userProfile");
-
-    if (!token || !profile) {
-      window.location.replace("index.html");
-      return false;
-    }
-
-    document.getElementById("userProfile").textContent =
-      profile.toUpperCase();
-
-    apiJson("/validate", {
-      method: "POST",
-      body: JSON.stringify({ token })
-    })
-      .then(response => {
-        if (!response.valid) {
-          localStorage.clear();
-          window.location.replace("index.html");
+    async function apiJson(path, options = {}) {
+      const res = await fetch(`${cleanApiBase()}${path}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {})
         }
-      })
-      .catch(err => {
-        console.log("VALIDATE ERROR:", err);
       });
 
-    return true;
-  }
+      const raw = await res.text();
 
-  async function logout() {
-    setAllButtonsDisabled(true);
+      let data;
 
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    if (logoutBtn) {
-      logoutBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
-    }
-
-    const token = localStorage.getItem("sessionToken");
-
-    try {
-      if (token) {
-        await apiJson("/logout", {
-          method: "POST",
-          body: JSON.stringify({ token })
-        });
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        throw new Error(raw || `HTTP ${res.status}`);
       }
-    } catch (err) {
-      console.log("LOGOUT ERROR:", err);
-    } finally {
-      localStorage.clear();
-      window.location.replace("index.html");
-    }
-  }
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    showLoader();
+      if (!res.ok) {
+        throw new Error(JSON.stringify(data));
+      }
 
-    if (!requireLogin()) return;
-
-    try {
-      // Optional: You can add additional data loading here
-    } finally {
-      hideLoader();
+      return data;
     }
 
-    // Login related buttons and events
-    document.getElementById("logoutBtn")?.addEventListener("click", logout);
+    function showLoader() {
+      const spinner = document.getElementById("globalSpinner");
 
-    // Navigate to the appropriate dashboard
-    document.getElementById("dashboardBtn")?.addEventListener("click", function() {
-      routeDashboardPage();
+      if (spinner) {
+        spinner.style.display = "flex";
+      }
+
+      blockUI(true);
+    }
+
+    function hideLoader() {
+      const spinner = document.getElementById("globalSpinner");
+
+      if (spinner) {
+        spinner.style.display = "none";
+      }
+
+      blockUI(false);
+    }
+
+    function blockUI(state) {
+      const blocker = document.getElementById("uiBlocker");
+
+      if (blocker) {
+        blocker.style.display = state ? "block" : "none";
+      }
+    }
+
+    function setAllButtonsDisabled(state) {
+      document
+        .querySelectorAll("button, input[type=button]")
+        .forEach(btn => {
+          btn.disabled = state;
+        });
+    }
+
+    function isMobileDevice() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+
+      return (
+        /android|iphone|ipad|ipod|iemobile|opera mini|mobile/i.test(ua) ||
+        window.innerWidth <= 768 ||
+        window.matchMedia("(pointer: coarse)").matches
+      );
+    }
+
+
+    function requireLogin() {
+      const token = localStorage.getItem("sessionToken");
+      const profile = localStorage.getItem("userProfile");
+
+      if (!token || !profile) {
+        window.location.replace("index.html");
+        return false;
+      }
+
+      document.getElementById("userProfile").textContent =
+        profile.toUpperCase();
+
+      apiJson("/validate", {
+        method: "POST",
+        body: JSON.stringify({ token })
+      })
+        .then(response => {
+          if (!response.valid) {
+            localStorage.clear();
+            window.location.replace("index.html");
+          }
+        })
+        .catch(err => {
+          console.log("VALIDATE ERROR:", err);
+        });
+
+      return true;
+    }
+
+
+    function handleLogoutClick() {
+      const role = (localStorage.getItem("userProfile") || "").toLowerCase();
+
+      if (role === "admin" || role === "mod") {
+        openLogoutMenu();
+      } else {
+        logout();
+      }
+    }
+
+    function openLogoutMenu() {
+      const menu = document.getElementById("logoutMenu");
+
+      if (!menu) return;
+
+      menu.style.display =
+        menu.style.display === "block" ? "none" : "block";
+    }
+
+    document.addEventListener("click", event => {
+      const menu = document.getElementById("logoutMenu");
+      const btn = document.getElementById("logoutBtn");
+
+      if (!menu || !btn) return;
+
+      if (!menu.contains(event.target) && !btn.contains(event.target)) {
+        menu.style.display = "none";
+      }
     });
 
-    document.getElementById("monitorBtn")?.addEventListener("click", function() {
+
+    function goMonitor() {
+      const btn = document.getElementById("monitorBtn");
+      const logoutBtn = document.getElementById("logoutMenuBtn");
+
+      if (btn?.dataset.loading) return;
+
+      btn.dataset.loading = "true";
+
+      [btn, logoutBtn].forEach(el => {
+        if (el) {
+          el.style.pointerEvents = "none";
+          el.style.opacity = "0.6";
+        }
+      });
+
+      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+
       window.location.href = "monitor.html";
-    });
+    }
 
-    document.getElementById("adminBtn")?.addEventListener("click", function() {
+    function goAdmin() {
+      const btn = document.getElementById("adminBtn");
+      const logoutBtn = document.getElementById("logoutMenuBtn");
+
+      if (btn?.dataset.loading) return;
+
+      btn.dataset.loading = "true";
+
+      [btn, logoutBtn].forEach(el => {
+        if (el) {
+          el.style.pointerEvents = "none";
+          el.style.opacity = "0.6";
+        }
+      });
+
+      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+
       window.location.href = "admin.html";
-    });
-  });
+    }
+
+    
+    async function logout() {
+      setAllButtonsDisabled(true);
+
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      if (logoutBtn) {
+        logoutBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+      }
+
+      const token = localStorage.getItem("sessionToken");
+
+      try {
+        if (token) {
+          await apiJson("/logout", {
+            method: "POST",
+            body: JSON.stringify({ token })
+          });
+        }
+
+      } catch (err) {
+        console.log("LOGOUT ERROR:", err);
+
+      } finally {
+        localStorage.clear();
+        window.location.replace("index.html");
+      }
+    }
+
+    function logoutFromMenu() {
+      const btn = document.getElementById("logoutMenuBtn");
+      const dashboardBtn = document.getElementById("dashboardBtn");
+      const monitorBtn = document.getElementById("monitorBtn");
+
+      [dashboardBtn, monitorBtn, btn].forEach(el => {
+        if (el) {
+          el.style.pointerEvents = "none";
+          el.style.opacity = "0.6";
+        }
+      });
+
+      if (btn) {
+        btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+      }
+
+      logout();
+    }
 </script>
 
   <script src="shared.js"></script>
