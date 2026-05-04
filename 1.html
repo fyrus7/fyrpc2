@@ -1223,6 +1223,8 @@ window.__legacyGoogleScriptRun = {
   <audio id="warnSound" src="Sound/warning.mp3"></audio>
   <audio id="successSound" src="Sound/tada.mp3"></audio>
 
+  <script src="config.js"></script>
+
   <script>
   function setView(mode) {
   const box = document.querySelector(".result-box");
@@ -1251,192 +1253,174 @@ document.addEventListener("DOMContentLoaded", () => {
   setView(saved);
 });
 
-  function showLoader() {
-  const spinner = document.getElementById("globalSpinner");
-  if (spinner) spinner.style.display = "flex";
-  blockUI(true);
-}
 
-function hideLoader() {
-  const spinner = document.getElementById("globalSpinner");
-  if (spinner) spinner.style.display = "none";
-  blockUI(false);
-}
+  const WORKER_API = window.APP_CONFIG.WORKER_API;
 
-function blockUI(state) {
-  const blocker = document.getElementById("uiBlocker");
-  if (blocker) {
-    blocker.style.display = state ? "block" : "none";
+  function cleanApiBase() {
+    return String(WORKER_API || "").replace(/\/+$/, "");
   }
-}
 
-// ===== On load: papar nama segera dari localStorage =====
-window.onload = function() {
-  const cachedProfile = localStorage.getItem('userProfile');
-  const token = localStorage.getItem('sessionToken');
-
-  if (cachedProfile && token) {
-    document.getElementById('userProfile').textContent = cachedProfile.toUpperCase();
-
-    // 🔥 VALIDATE SESSION
-    window.__legacyGoogleScriptRun.withSuccessHandler(function(res) {
-      if (!res.valid) {
-        alert("Session expired or logged in on another device");
-        localStorage.removeItem('sessionToken');
-        localStorage.removeItem('userProfile');
-        loadLogin();
+  async function apiJson(path, options = {}) {
+    const res = await fetch(`${cleanApiBase()}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
       }
-    }).validateSession(token);
+    });
 
-  } else {
-    loadLogin();
-  }
+    const raw = await res.text();
 
-  updateOnHoldButton();
-  syncCollectButton();
-};
-
-window.addEventListener('storage', function(e) {
-  if (e.key === 'sessionToken' && !e.newValue) {
-    loadLogin(); // 🔥 terus pergi login page
-  }
-});
-
-// ===== Pergi ke login page =====
-function loadLogin() {
-  window.__legacyGoogleScriptRun.withSuccessHandler(function(html) {
-    document.open(); // 🔥 tambah ni
-    document.write(html);
-    document.close();
-  }).getLoginPage();
-}
-
-// ===== Logout =====
-function logout() {
-  setAllButtonsDisabled(true);
-
-  const logoutBtn = document.getElementById('logoutBtn');
-
-  // 🔥 simpan width supaya tak shrink
-  const width = logoutBtn.offsetWidth + "px";
-  logoutBtn.style.width = width;
-
-  // 🔥 tukar ke spinner
-  logoutBtn.innerHTML = '<i class="bi bi-arrow-repeat spin" style="font-size:20px;"></i>';
-
-  const token = localStorage.getItem('sessionToken');
-
-  function finishLogout() {
-    localStorage.removeItem('sessionToken');
-    localStorage.removeItem('userProfile');
-    loadLogin();
-  }
-
-  if (token) {
-    window.__legacyGoogleScriptRun.withSuccessHandler(function() {
-      finishLogout();
-    }).invalidateSession(token);
-  } else {
-    finishLogout();
-  }
-}
-
-function handleLogoutClick() {
-  const role = (localStorage.getItem('userProfile') || "").toLowerCase();
-
-  // 👉 hanya admin & mod guna menu
-  if (role === "admin" || role === "mod") {
-    openLogoutMenu();
-  } else {
-    logout(); // user biasa terus logout
-  }
-}
-
-
-function openLogoutMenu() {
-  const menu = document.getElementById("logoutMenu");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
-}
-
-// klik luar = tutup menu
-document.addEventListener("click", function(e) {
-  const menu = document.getElementById("logoutMenu");
-  const btn = document.getElementById("logoutBtn");
-
-  if (!menu.contains(e.target) && !btn.contains(e.target)) {
-    menu.style.display = "none";
-  }
-});
-
-function goMonitor() {
-  const btn = document.getElementById("monitorBtn");
-
-  document.getElementById("logoutMenuBtn").style.pointerEvents = "none";
-  btn.style.pointerEvents = "none";
-
-  btn.innerHTML = '<div class="loader" style="width:20px;height:20px;border-width:3px;margin:auto;"></div>';
-
-  window.__legacyGoogleScriptRun.withSuccessHandler(function(html) {
-    document.open();
-    document.write(html);
-    document.close();
-  }).getMonitorPage();
-}
-
-function goAdmin() {
-  const btn = document.getElementById("adminBtn");
-
-  document.getElementById("logoutMenuBtn").style.pointerEvents = "none";
-  btn.style.pointerEvents = "none";
-
-  btn.innerHTML = '<div class="loader" style="width:20px;height:20px;border-width:3px;margin:auto;"></div>';
-
-  window.__legacyGoogleScriptRun.withSuccessHandler(function(html) {
-    document.open();
-    document.write(html);
-    document.close();
-  }).getAdminPage();
-}
-
-
-function logoutFromMenu() {
-  const btn = document.getElementById("logoutMenuBtn");
-
-  const monitorBtn = document.getElementById("monitorBtn");
-  const adminBtn = document.getElementById("adminBtn");
-
-  // 👉 disable semua safely
-  [monitorBtn, adminBtn, btn].forEach(el => {
-    if (el) {
-      el.style.pointerEvents = "none";
-      el.style.opacity = "0.6";
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      throw new Error(raw || `HTTP ${res.status}`);
     }
+
+    if (!res.ok) {
+      throw new Error(JSON.stringify(data));
+    }
+
+    return data;
+  }
+
+  function showLoader() {
+    const spinner = document.getElementById("globalSpinner");
+
+    if (spinner) {
+      spinner.style.display = "flex";
+    }
+
+    blockUI(true);
+  }
+
+  function hideLoader() {
+    const spinner = document.getElementById("globalSpinner");
+
+    if (spinner) {
+      spinner.style.display = "none";
+    }
+
+    blockUI(false);
+  }
+
+  function blockUI(state) {
+    const blocker = document.getElementById("uiBlocker");
+
+    if (blocker) {
+      blocker.style.display = state ? "block" : "none";
+    }
+  }
+
+  function setAllButtonsDisabled(state) {
+    document
+      .querySelectorAll("button, input[type=button]")
+      .forEach(btn => {
+        btn.disabled = state;
+      });
+  }
+
+  function isMobileDevice() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera || "";
+
+    return (
+      /android|iphone|ipad|ipod|iemobile|opera mini|mobile/i.test(ua) ||
+      window.innerWidth <= 768 ||
+      window.matchMedia("(pointer: coarse)").matches
+    );
+  }
+
+  function routeDashboardPage() {
+    window.location.href = isMobileDevice()
+      ? "mobile.html"
+      : "desktop.html";
+  }
+
+  function requireLogin() {
+    const token = localStorage.getItem("sessionToken");
+    const profile = localStorage.getItem("userProfile");
+
+    if (!token || !profile) {
+      window.location.replace("index.html");
+      return false;
+    }
+
+    document.getElementById("userProfile").textContent =
+      profile.toUpperCase();
+
+    apiJson("/validate", {
+      method: "POST",
+      body: JSON.stringify({ token })
+    })
+      .then(response => {
+        if (!response.valid) {
+          localStorage.clear();
+          window.location.replace("index.html");
+        }
+      })
+      .catch(err => {
+        console.log("VALIDATE ERROR:", err);
+      });
+
+    return true;
+  }
+
+  async function logout() {
+    setAllButtonsDisabled(true);
+
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (logoutBtn) {
+      logoutBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+    }
+
+    const token = localStorage.getItem("sessionToken");
+
+    try {
+      if (token) {
+        await apiJson("/logout", {
+          method: "POST",
+          body: JSON.stringify({ token })
+        });
+      }
+    } catch (err) {
+      console.log("LOGOUT ERROR:", err);
+    } finally {
+      localStorage.clear();
+      window.location.replace("index.html");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    showLoader();
+
+    if (!requireLogin()) return;
+
+    try {
+      // Optional: You can add additional data loading here
+    } finally {
+      hideLoader();
+    }
+
+    // Login related buttons and events
+    document.getElementById("logoutBtn")?.addEventListener("click", logout);
+
+    // Navigate to the appropriate dashboard
+    document.getElementById("dashboardBtn")?.addEventListener("click", function() {
+      routeDashboardPage();
+    });
+
+    document.getElementById("monitorBtn")?.addEventListener("click", function() {
+      window.location.href = "monitor.html";
+    });
+
+    document.getElementById("adminBtn")?.addEventListener("click", function() {
+      window.location.href = "admin.html";
+    });
   });
-
-  // 👉 spinner
-  btn.innerHTML = '<div class="loader" style="width:20px;height:20px;border-width:3px;margin:auto;"></div>';
-
-  const token = localStorage.getItem('sessionToken');
-
-  function finishLogout() {
-    localStorage.removeItem('sessionToken');
-    localStorage.removeItem('userProfile');
-    loadLogin();
-  }
-
-  if (token) {
-    window.__legacyGoogleScriptRun.withSuccessHandler(function() {
-      finishLogout();
-    }).invalidateSession(token);
-  } else {
-    finishLogout();
-  }
-}
-
 </script>
 
-  
-  <script src="config.js"></script>
   <script src="shared.js"></script>
 
 </body>
