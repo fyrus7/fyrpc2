@@ -646,11 +646,14 @@ function removeSingleHold(rowId) {
   syncCollectButton();
 }
 
+
 async function collectHold() {
   const holdData = getHoldData();
   if (!holdData.rows.length) return;
 
   const userProfile = localStorage.getItem("userProfile") || "";
+  const markSound = safeEl("markSound");
+
   const markedRows = holdData.rows.map(d => ({
     row: d.row,
     collectBy1: holdData.collectBy1 || "",
@@ -658,22 +661,31 @@ async function collectHold() {
     userProfile
   }));
 
-// NEW LINE SIZE
-const holdItems = Array.from(document.querySelectorAll(".hold-item"));
+  // 🔥 extract DOM data BEFORE anything changes
+  const items = Array.from(document.querySelectorAll(".hold-item")).map(item => ({
+    name: item.querySelector(".hold-name")?.textContent?.trim() || "",
+    bib: item.querySelector(".hold-bib")?.textContent?.trim() || "",
+    size: (item.querySelector(".hold-size")?.textContent || "").trim().toUpperCase()
+  }));
 
-const items = holdItems.map(item => ({
-  name: item.querySelector(".hold-name")?.textContent?.trim() || "",
-  bib: item.querySelector(".hold-bib")?.textContent?.trim() || "",
-  size: item.querySelector(".hold-size")?.textContent?.trim() || ""
-}));
+  // 🔥 size sort order (auto logic)
+  const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 
-const sizeCount = {};
+  const sizeCount = {};
 
-items.forEach(i => {
-  if (i.size) {
+  items.forEach(i => {
+    if (!i.size) return;
     sizeCount[i.size] = (sizeCount[i.size] || 0) + 1;
-  }
-});
+  });
+
+  const sortedSizeSummary = Object.entries(sizeCount)
+    .sort((a, b) => {
+      const ai = sizeOrder.indexOf(a[0]) === -1 ? 999 : sizeOrder.indexOf(a[0]);
+      const bi = sizeOrder.indexOf(b[0]) === -1 ? 999 : sizeOrder.indexOf(b[0]);
+      return ai - bi;
+    })
+    .map(([k, v]) => `${k} (${v})`)
+    .join(" / ");
 
   showLoader();
 
@@ -681,73 +693,48 @@ items.forEach(i => {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
 
-    const markSound = safeEl("markSound");
     if (markSound) {
       markSound.currentTime = 0;
       markSound.play();
     }
 
-    // ❌ ONLY MODAL UI
+    // 🔥 modal UI only (NO REBUILD)
     setDisplay("modalRemoveBtn", "none");
     setDisplay("modalCollectBtn", "none");
 
-const holdList = safeEl("holdList");
+    const holdList = safeEl("holdList");
 
-if (holdList) {
-  let html = `
-    <div style="
-      padding:10px;
-      border:1px solid green;
-      background:#e8f5e9;
-      color:#2e7d32;
-      font-weight:bold;
-      text-align:center;
-      margin-bottom:8px;
-    ">
-      SUCCESSFULL
-    </div>
-  `;
+    if (holdList) {
+      // SUCCESS HEADER (prepend only)
+      const success = document.createElement("div");
+      success.style.cssText = `
+        padding:10px;
+        border:1px solid green;
+        background:#e8f5e9;
+        color:#2e7d32;
+        font-weight:bold;
+        text-align:center;
+        margin-bottom:8px;
+      `;
+      success.innerText = "SUCCESSFULL";
 
-  // LIST DETAILS
-  items.forEach(i => {
-    html += `
-      <div style="margin-bottom:6px;">
-        <div style="font-weight:bold;">${i.name}</div>
-        <div style="display:flex; justify-content:space-between;">
-          <span>${i.bib}</span>
-          <span>${i.size}</span>
-        </div>
-      </div>
-    `;
-  });
+      holdList.prepend(success);
 
-  // SIZE SUMMARY
-  let summary = Object.entries(sizeCount)
-    .map(([k, v]) => `${k} (${v})`)
-    .join(" / ");
+      // SIZE FOOTER (append only)
+      const footer = document.createElement("div");
+      footer.style.cssText = `
+        margin-top:10px;
+        padding-top:8px;
+        border-top:1px solid #ccc;
+        font-weight:bold;
+      `;
+      footer.innerText = sortedSizeSummary;
 
-  html += `
-    <div style="
-      margin-top:10px;
-      padding-top:8px;
-      border-top:1px solid #ccc;
-      font-weight:bold;
-    ">
-      ${summary}
-    </div>
-  `;
-
-  holdList.innerHTML = html;
-}
-
-    // 🔥 LOAD SUMMARY INTO MODAL ONLY
-    loadHoldSummaryIntoModal(res.summary || {
-      total: holdData.rows.length,
-      collected: holdData.rows.length,
-      balance: 0
-    });
+      holdList.appendChild(footer);
+    }
 
     const okBtn = safeEl("modalOkBtn");
+
     if (okBtn) {
       okBtn.style.display = "inline-block";
 
