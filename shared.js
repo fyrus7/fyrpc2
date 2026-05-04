@@ -602,6 +602,29 @@ function updateOnHoldButton() {
   container.style.display = "block";
 }
 
+const originalUpdateOnHoldButton = updateOnHoldButton;
+
+updateOnHoldButton = function () {
+  // call function asal dulu
+  originalUpdateOnHoldButton();
+
+  // lepas tu inject behavior baru (page ini sahaja)
+  const btn = document.getElementById("onHoldButton");
+  const input = document.getElementById("searchTerm");
+  const container = document.getElementById("onHoldContainer");
+
+  if (!btn || !input || !container) return;
+
+  const visible = container.style.display !== "none";
+
+  // show/hide button ikut container
+  btn.style.display = visible ? "flex" : "none";
+
+  // adjust input padding
+  input.classList.toggle("with-hold", visible);
+};
+
+
 function syncCollectButton() {
   const btn = safeEl("collectButton");
   const msg = safeEl("message");
