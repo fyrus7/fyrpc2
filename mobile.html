@@ -110,6 +110,33 @@
             #searchButton:hover {
           opacity: 0.9;
         }
+
+/* HOLD mode adjustment */
+.search-box.with-hold {
+  padding-left: 55px; /* 🔥 tambah ruang kiri bila ada hold */
+}
+
+/* HOLD button dalam input */
+#onHoldButton {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+
+  height: 26px;
+  padding: 0 8px;
+
+  font-size: 12px;
+  border-radius: 12px;
+
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
 /*
         #footer {
           position: fixed;
@@ -1238,9 +1265,24 @@ window.__legacyGoogleScriptRun = {
 
   <!-- Form Container -->
 <div class="search-wrapper">
-  <input type="text" id="searchTerm" class="search-box" placeholder="Reg ID, MyKad or Name" onkeydown="handleEnter(event)">
+
+  <input type="text"
+    id="searchTerm"
+    class="search-box"
+    placeholder="Reg ID, MyKad or Name"
+    onkeydown="handleEnter(event)">
+
+  <button
+    type="button"
+    id="onHoldButton"
+    onclick="openHoldModal()"
+    style="display:none;"
+  >(0)</button>
+
   <button type="button" id="searchButton" onclick="search()">
-    <i class="bi bi-search"></i></button>
+    <i class="bi bi-search"></i>
+  </button>
+
 </div>
   <!-- Clear Button -->
   <div id="clearButtonContainer" class="clear-button">
@@ -1658,6 +1700,25 @@ function logoutFromMenu() {
   }
 }
 
+
+function updateOnHoldButton() {
+  const btn = document.getElementById("onHoldButton");
+  const input = document.getElementById("searchTerm");
+
+  const holdList = JSON.parse(localStorage.getItem("holdList") || "[]");
+  const count = holdList.length;
+
+  if (count > 0) {
+    btn.style.display = "flex";
+    btn.textContent = `(${count})`;
+
+    input.classList.add("with-hold"); // 🔥 shift typing ke kanan
+  } else {
+    btn.style.display = "none";
+
+    input.classList.remove("with-hold"); // 🔥 balik normal kiri
+  }
+}
 </script>
 
 
