@@ -503,7 +503,9 @@ async function collectHold() {
     setDisplay("modalCollectBtn", "none");
     const holdList = safeEl("holdList");
     if (holdList) {
-      holdList.innerHTML = `<div style="padding:10px;border:1px solid green;background:#e8f5e9;color:#2e7d32;font-weight:bold;text-align:center;margin-bottom:8px;">SUCCESSFULL</div>${holdList.innerHTML}`;
+      holdList.innerHTML =
+        `<div style="padding:10px;border:1px solid green;background:#e8f5e9;color:#2e7d32;font-weight:bold;text-align:center;margin-bottom:8px;">SUCCESSFULL</div>`
+        + holdList.innerHTML;
     }
 
     const okBtn = safeEl("modalOkBtn");
