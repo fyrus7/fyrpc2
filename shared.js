@@ -658,6 +658,14 @@ async function collectHold() {
     userProfile
   }));
 
+// NEW LINE SIZE
+const holdListEl = document.querySelectorAll(".hold-item");
+
+const printData = Array.from(holdListEl).map(item => ({
+  valueBIB: item.querySelector(".hold-bib")?.textContent?.trim() || "",
+  valueSIZE: item.querySelector(".hold-size")?.textContent?.trim() || ""
+}));
+
   showLoader();
 
   try {
@@ -674,23 +682,40 @@ async function collectHold() {
     setDisplay("modalRemoveBtn", "none");
     setDisplay("modalCollectBtn", "none");
 
-    const holdList = safeEl("holdList");
-    if (holdList) {
-      holdList.innerHTML = `
-        <div style="
-          padding:10px;
-          border:1px solid green;
-          background:#e8f5e9;
-          color:#2e7d32;
-          font-weight:bold;
-          text-align:center;
-          margin-bottom:8px;
-        ">
-          SUCCESSFULL
-        </div>
-        ${holdList.innerHTML}
-      `;
-    }
+const holdList = safeEl("holdList");
+
+if (holdList) {
+  let html = `
+    <div style="
+      padding:10px;
+      border:1px solid green;
+      background:#e8f5e9;
+      color:#2e7d32;
+      font-weight:bold;
+      text-align:center;
+      margin-bottom:8px;
+    ">
+      SUCCESSFULL
+    </div>
+  `;
+
+  html += `
+    <div style="margin-top:10px; font-size:14px;">
+  `;
+
+  printData.forEach(item => {
+    html += `
+      <div style="display:flex; justify-content:space-between; padding:4px 0;">
+        <div>${item.valueBIB}</div>
+        <div>${item.valueSIZE}</div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  holdList.innerHTML = html;
+}
 
     // 🔥 LOAD SUMMARY INTO MODAL ONLY
     loadHoldSummaryIntoModal(res.summary || {
