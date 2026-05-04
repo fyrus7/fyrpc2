@@ -276,13 +276,7 @@ async function collect() {
   try {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
-// new data line pass to collect result card
-    const printData = getSelectedPrintData(selected);
-    
-    const collectSummary = printData.map(item =>
-      `${item.valueBIB} ${item.valueSIZE ? "(" + item.valueSIZE + ")" : ""}`.trim()
-    );
-// new data end
+
     if (resultContainer) {
       resultContainer.innerHTML = '<div style="padding:10px; border:1px solid green; color:green; font-weight:bold;">✅ SUCCESSFULL</div>';
     }
@@ -304,14 +298,10 @@ async function collect() {
     }
 
     if (markSound) markSound.play();
- //   setTimeout(() => {
- //     clearSearch();
- //     loadSummaryCard();
-//    }, 5000);
-    showCollectSuccessCard(collectSummary, () => {
+    setTimeout(() => {
       clearSearch();
       loadSummaryCard();
-    });
+    }, 5000);
   } catch (err) {
     console.error(err);
     if (resultContainer) resultContainer.innerHTML = '<div style="padding:10px; border:1px solid red; color:red; font-weight:bold;">❌ Collect failed</div>';
@@ -320,154 +310,6 @@ async function collect() {
     setAllButtonsDisabled(false);
   }
 }
-
-// AFTER COLLECT RESULT CARD
-function showCollectSuccessCard(dataList, onDismiss) {
-  const resultContainer = safeEl("result");
-  if (!resultContainer) return;
-
-  const sizeMap = {};
-
-  const items = (dataList || []).map(item => {
-    let bib = "";
-    let size = "";
-
-    const match = item.match(/\((.*?)\)/);
-    if (match) size = (match[1] || "").trim();
-
-    const cleaned = item.replace(/\(.*?\)/g, "").trim();
-    bib = cleaned;
-
-    const s = size.toLowerCase();
-
-    // COUNT SIZE (ignore invalid)
-    if (size && !["na", "n/a", "nil", "-"].includes(s)) {
-      sizeMap[size] = (sizeMap[size] || 0) + 1;
-    }
-
-    return `
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        padding:6px 0;
-        border-bottom:1px solid rgba(0,0,0,0.06);
-        font-size:15px;
-        font-weight:600;
-      ">
-        <span>${bib}</span>
-        <span style="opacity:0.7;">${size || "-"}</span>
-      </div>
-    `;
-  }).join("");
-
-  // SORT SIZE (AUTO SMART)
-  const sizeKeys = Object.keys(sizeMap)
-    .filter(k => k && !["na", "n/a", "nil", "-"].includes(k.toLowerCase()))
-    .sort((a, b) => getSizeValue(a) - getSizeValue(b));
-
-  let summaryText = "";
-
-  if (sizeKeys.length > 1) {
-    summaryText = sizeKeys
-      .map(k => `${k} (${sizeMap[k]})`)
-      .join(" / ");
-  }
-
-  resultContainer.innerHTML = `
-    <div id="collectSuccessCard" style="
-      padding:15px;
-      border:2px solid #28a745;
-      background:#eaffea;
-      color:#1b5e20;
-      border-radius:10px;
-      box-shadow:0 6px 18px rgba(0,0,0,0.15);
-      margin-top:10px;
-      cursor:pointer;
-    ">
-
-      <div style="
-        font-size:18px;
-        margin-bottom:10px;
-        text-align:center;
-        font-weight:bold;
-      ">
-        SUCCESSFULLY COLLECTED
-      </div>
-
-      <div style="
-        background:#ffffffaa;
-        padding:10px;
-        border-radius:8px;
-      ">
-        ${items}
-
-        <div style="
-          margin-top:10px;
-          text-align:right;
-          font-size:12px;
-          font-weight:700;
-          opacity:0.85;
-        ">
-          ${summaryText ? summaryText : ""}
-        </div>
-      </div>
-
-      <div style="
-        font-size:11px;
-        text-align:right;
-        opacity:0.7;
-        margin-top:6px;
-        cursor:pointer;
-      ">
-        dismiss
-      </div>
-
-    </div>
-  `;
-
-  const card = document.getElementById("collectSuccessCard");
-
-  const dismiss = () => onDismiss?.();
-
-  card.onclick = dismiss;
-
-  card.querySelector("div:last-child").onclick = (e) => {
-    e.stopPropagation();
-    dismiss();
-  };
-}
-
-function getSizeValue(size) {
-  if (!size) return 999;
-
-  let s = size.toUpperCase().replace(/\s+/g, "");
-
-  const base = {
-    "XXXS": 1,
-    "XXS": 2,
-    "XS": 3,
-    "S": 4,
-    "M": 5,
-    "L": 6,
-    "XL": 7,
-    "XXL": 8,
-    "XXXL": 9
-  };
-
-  if (base[s]) return base[s];
-
-  const match = s.match(/^(\d+)?(XS|XL)$/);
-  if (match) {
-    const num = parseInt(match[1] || "1", 10);
-    const type = match[2];
-
-    if (type === "XS") return 2 - num;
-    if (type === "XL") return 7 + (num - 1);
-  }
-
-  return 1000; // kids / numeric / unknown last
-}
-
 
 function togglePrint() {
   enablePrint = !enablePrint;
