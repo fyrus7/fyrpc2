@@ -1387,7 +1387,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const logoutBtn = document.getElementById("logoutBtn");
 
-      if (logoutBtn) {
+      if (logoutBtn && logoutBtn.offsetParent !== null) {
         logoutBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
       }
 
@@ -1410,24 +1410,27 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    function logoutFromMenu() {
-      const btn = document.getElementById("logoutMenuBtn");
-      const dashboardBtn = document.getElementById("dashboardBtn");
-      const monitorBtn = document.getElementById("monitorBtn");
+function logoutFromMenu() {
+  const btn = document.getElementById("logoutMenuBtn");
+  const dashboardBtn = document.getElementById("dashboardBtn");
+  const monitorBtn = document.getElementById("monitorBtn");
 
-      [dashboardBtn, monitorBtn, btn].forEach(el => {
-        if (el) {
-          el.style.pointerEvents = "none";
-          el.style.opacity = "0.6";
-        }
-      });
-
-      if (btn) {
-        btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
-      }
-
-      logout();
+  [dashboardBtn, monitorBtn, btn].forEach(el => {
+    if (el) {
+      el.style.pointerEvents = "none";
+      el.style.opacity = "0.6";
     }
+  });
+
+  if (btn) {
+    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+  }
+
+  // 🔥 force render frame sebelum logout jalan
+  setTimeout(() => {
+    logout();
+  }, 50);
+}
 </script>
 
   <script src="shared.js"></script>
