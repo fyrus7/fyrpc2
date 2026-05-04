@@ -141,11 +141,22 @@
     }
 
     .spin {
-      animation: spin 1s linear infinite;
-      display: inline-block;
-      font-size: 40px;
-      color: white;
-    }
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+/* Spinner besar untuk global loader sahaja */
+#globalSpinner .spin {
+  font-size: 40px;
+  color: white;
+}
+
+/* Spinner kecil dalam button */
+.btn-spin {
+  font-size: 16px;
+  color: white;
+  line-height: 1;
+}
 
     @keyframes spin {
       100% {
