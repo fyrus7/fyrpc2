@@ -434,7 +434,7 @@ if (size) {
   cursor:pointer;
 ">
   dismiss
-</div>w
+</div>
 
     </div>
   `;
@@ -454,6 +454,7 @@ if (dismissBtn) {
     e.stopPropagation();
     dismiss();
   };
+}
 }
 
 function getSizeValue(size) {
