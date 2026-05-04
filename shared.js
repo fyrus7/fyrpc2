@@ -670,79 +670,61 @@ async function collectHold() {
 
     if (markSound) markSound.play();
 
-    // =========================
-    // 1. BUILD HOLD RESULT (LIKE NORMAL COLLECT)
-    // =========================
-    const holdList = safeEl("holdList");
+// =========================
+// 3. BUILD SUMMARY LIKE NORMAL COLLECT
+// =========================
+const holdList = safeEl("holdList");
 
-    let holdItemsHTML = "";
-    let sizeMap = {};
+let sizeMap = {};
+let collectSummary = [];
 
-    if (holdList) {
-      const items = holdList.querySelectorAll(".hold-item");
+if (holdList) {
+  const items = holdList.querySelectorAll(".hold-item");
 
-      items.forEach(item => {
-        const bib = item.querySelector(".hold-bib")?.textContent?.trim() || "";
-        const size = item.querySelector(".hold-size")?.textContent?.trim() || "";
+  items.forEach(item => {
+    const bib = item.querySelector(".hold-bib")?.textContent?.trim() || "";
+    const size = item.querySelector(".hold-size")?.textContent?.trim() || "";
 
-        holdItemsHTML += `
-          <div style="display:flex;justify-content:space-between;padding:2px 0;">
-            <div>${bib}</div>
-            <div>${size}</div>
-          </div>
-        `;
+    collectSummary.push(
+      `${bib} ${size ? "(" + size + ")" : ""}`.trim()
+    );
 
-        if (size) {
-          sizeMap[size] = (sizeMap[size] || 0) + 1;
-        }
-      });
+    if (size) {
+      sizeMap[size] = (sizeMap[size] || 0) + 1;
     }
+  });
+}
 
-    const sizeSummary = Object.entries(sizeMap)
-      .sort((a, b) => a[0].localeCompare(b[0])) // ASC size sort
-      .map(([k, v]) => `${k} (${v})`)
-      .join(" / ");
+// sort size kecil → besar (natural sort safe)
+const sizeSummary = Object.entries(sizeMap)
+  .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
+  .map(([k, v]) => `${k} (${v})`)
+  .join(" / ");
 
-    const finalHTML = `
-      <div style="padding:10px;border:1px solid green;background:#e8f5e9;color:#2e7d32;font-weight:bold;text-align:center;margin-bottom:8px;">
-        SUCCESSFULL
-      </div>
+// attach summary last line (optional kalau UI kau guna)
+collectSummary.push(sizeSummary);
 
-      <div style="margin-bottom:8px;">
-        ${holdItemsHTML}
-      </div>
+// =========================
+// 4. CLOSE MODAL CLEAN
+// =========================
+const modal = safeEl("holdModal");
+if (modal) modal.style.display = "none";
 
-      <div style="font-weight:bold;border-top:1px solid #ccc;padding-top:6px;">
-        ${sizeSummary}
-      </div>
-    `;
+setDisplay("modalRemoveBtn", "inline-block");
+setDisplay("modalCollectBtn", "inline-block");
 
-    // =========================
-    // 2. CLOSE MODAL CLEAN
-    // =========================
-    const modal = safeEl("holdModal");
-    if (modal) modal.style.display = "none";
+// =========================
+// 5. CLEAR HOLD DATA FIRST
+// =========================
+removeHold();
 
-    setDisplay("modalRemoveBtn", "inline-block");
-    setDisplay("modalCollectBtn", "inline-block");
-
-    // =========================
-    // 3. PUSH TO NORMAL RESULT CARD
-    // =========================
-    const result = safeEl("result");
-    if (result) {
-      result.innerHTML = finalHTML;
-    }
-
-    // =========================
-    // 4. CLEAR HOLD DATA
-    // =========================
-    removeHold();
-
-    // =========================
-    // 5. REFRESH SUMMARY
-    // =========================
-    showCollectSuccessCard();
+// =========================
+// 6. SHOW NORMAL COLLECT SUCCESS CARD
+// =========================
+showCollectSuccessCard(collectSummary, () => {
+  clearSearch();
+  loadSummaryCard();
+});
 
   } catch (err) {
     console.error(err);
