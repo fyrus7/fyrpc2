@@ -1247,9 +1247,13 @@ window.__legacyGoogleScriptRun = {
     placeholder="Reg ID, MyKad or Name"
     onkeydown="handleEnter(event)">
 
-  <div id="onHoldContainer" style="display:none;">
-    <button id="onHoldButton" onclick="openHoldModal()">(0)</button>
-  </div>
+<div id="onHoldContainer" style="display:none;">
+  <button
+    type="button"
+    id="onHoldButton"
+    onclick="openHoldModal()"
+  >(0)</button>
+</div>
 
   <button type="button" id="searchButton" onclick="search()">
     <i class="bi bi-search"></i>
