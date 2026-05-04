@@ -485,6 +485,7 @@ async function collectHold() {
 
   const userProfile = localStorage.getItem("userProfile") || "";
   const markSound = safeEl("markSound");
+
   const markedRows = holdData.rows.map(d => ({
     row: d.row,
     collectBy1: holdData.collectBy1 || "",
@@ -493,34 +494,57 @@ async function collectHold() {
   }));
 
   showLoader();
+
   try {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
-    if (markSound) markSound.play();
-    
+
+    if (markSound) {
+      markSound.currentTime = 0;
+      markSound.play();
+    }
 
     setDisplay("modalRemoveBtn", "none");
     setDisplay("modalCollectBtn", "none");
+
     const holdList = safeEl("holdList");
     if (holdList) {
-      holdList.innerHTML =
-        `<div style="padding:10px;border:1px solid green;background:#e8f5e9;color:#2e7d32;font-weight:bold;text-align:center;margin-bottom:8px;">SUCCESSFULL</div>`
-        + holdList.innerHTML;
+      const wrapper = document.createElement("div");
+      wrapper.className = "hold-collect-success";
+      wrapper.innerHTML = `
+        <div style="
+          padding:10px;
+          border:1px solid green;
+          background:#e8f5e9;
+          color:#2e7d32;
+          font-weight:bold;
+          text-align:center;
+          margin-bottom:8px;
+        ">
+          SUCCESSFULL
+        </div>
+      `;
+      holdList.prepend(wrapper);
     }
 
     const okBtn = safeEl("modalOkBtn");
     if (okBtn) {
       okBtn.style.display = "inline-block";
-      okBtn.onclick = function() {
-        setDisplay("holdModal", "none");
-        removeHold();
-        okBtn.style.display = "none";
-        setDisplay("modalRemoveBtn", "inline-block");
-        setDisplay("modalCollectBtn", "inline-block");
 
-        loadSummaryCard();
+      okBtn.onclick = function () {
+        setDisplay("holdModal", "none");
+
+        setTimeout(() => {
+          removeHold();
+          loadSummaryCard();
+
+          okBtn.style.display = "none";
+          setDisplay("modalRemoveBtn", "inline-block");
+          setDisplay("modalCollectBtn", "inline-block");
+        }, 150);
       };
     }
+
   } catch (err) {
     console.error(err);
     alert("Collect hold failed");
