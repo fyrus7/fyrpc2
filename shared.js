@@ -651,7 +651,6 @@ async function collectHold() {
   if (!holdData.rows.length) return;
 
   const userProfile = localStorage.getItem("userProfile") || "";
-  const markSound = safeEl("markSound");
   const markedRows = holdData.rows.map(d => ({
     row: d.row,
     collectBy1: holdData.collectBy1 || "",
@@ -660,25 +659,60 @@ async function collectHold() {
   }));
 
   showLoader();
+
   try {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
-    if (markSound) markSound.play();
 
-    // ✅ ambil data dari modal
+    const markSound = safeEl("markSound");
+    if (markSound) {
+      markSound.currentTime = 0;
+      markSound.play();
+    }
+
+    // ❌ ONLY MODAL UI
+    setDisplay("modalRemoveBtn", "none");
+    setDisplay("modalCollectBtn", "none");
+
     const holdList = safeEl("holdList");
-    const printData = getHoldPrintData(holdList);
-    
-    const collectSummary = printData.map(item =>
-      `${item.valueBIB} ${item.valueSIZE ? "(" + item.valueSIZE + ")" : ""}`.trim()
-    );
-    
-    // ✅ terus guna result card (BUANG cara lama)
-    showCollectSuccessCard(collectSummary, () => {
-      setDisplay("holdModal", "none");
-      removeHold();
-      loadSummaryCard();
+    if (holdList) {
+      holdList.innerHTML = `
+        <div style="
+          padding:10px;
+          border:1px solid green;
+          background:#e8f5e9;
+          color:#2e7d32;
+          font-weight:bold;
+          text-align:center;
+          margin-bottom:8px;
+        ">
+          SUCCESSFULL
+        </div>
+        ${holdList.innerHTML}
+      `;
+    }
+
+    // 🔥 LOAD SUMMARY INTO MODAL ONLY
+    loadHoldSummaryIntoModal(res.summary || {
+      total: holdData.rows.length,
+      collected: holdData.rows.length,
+      balance: 0
     });
+
+    const okBtn = safeEl("modalOkBtn");
+    if (okBtn) {
+      okBtn.style.display = "inline-block";
+
+      okBtn.onclick = function () {
+        setDisplay("holdModal", "none");
+
+        removeHold();
+
+        okBtn.style.display = "none";
+        setDisplay("modalRemoveBtn", "inline-block");
+        setDisplay("modalCollectBtn", "inline-block");
+      };
+    }
 
   } catch (err) {
     console.error(err);
@@ -687,6 +721,30 @@ async function collectHold() {
     hideLoader();
   }
 }
+
+
+// new hold data collect for size
+function loadHoldSummaryIntoModal(data) {
+  const box = safeEl("holdSummaryBox");
+  if (!box) return;
+
+  box.innerHTML = `
+    <div style="
+      margin-top:10px;
+      padding:10px;
+      border:1px solid #2196f3;
+      background:#e3f2fd;
+      border-radius:6px;
+      font-size:14px;
+    ">
+      <div><b>Total:</b> ${data.total || 0}</div>
+      <div><b>Collected:</b> ${data.collected || 0}</div>
+      <div><b>Balance:</b> ${data.balance || 0}</div>
+    </div>
+  `;
+}
+
+
 
 function closeHoldModal() {
   setDisplay("holdModal", "none");
