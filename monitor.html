@@ -804,12 +804,45 @@
       }
     });
 
-    function goAdmin() {
-      window.location.href = "admin.html";
-    }
 
     function goDashboard() {
+      const btn = document.getElementById("dashboardBtn");
+      const logoutBtn = document.getElementById("logoutMenuBtn");
+
+      if (btn?.dataset.loading) return;
+
+      btn.dataset.loading = "true";
+
+      [btn, logoutBtn].forEach(el => {
+        if (el) {
+          el.style.pointerEvents = "none";
+          el.style.opacity = "0.6";
+        }
+      });
+
+      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+
       routeDashboardPage();
+    }
+
+    function goAdmin() {
+      const btn = document.getElementById("adminBtn");
+      const logoutBtn = document.getElementById("logoutMenuBtn");
+
+      if (btn?.dataset.loading) return;
+
+      btn.dataset.loading = "true";
+
+      [btn, logoutBtn].forEach(el => {
+        if (el) {
+          el.style.pointerEvents = "none";
+          el.style.opacity = "0.6";
+        }
+      });
+
+      btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+
+      window.location.href = "admin.html";
     }
 
     async function logout() {
@@ -818,8 +851,7 @@
       const logoutBtn = document.getElementById("logoutBtn");
 
       if (logoutBtn) {
-        logoutBtn.innerHTML =
-          '<div class="loader" style="width:20px;height:20px;border-width:3px;"></div>';
+        logoutBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
       }
 
       const token = localStorage.getItem("sessionToken");
@@ -856,8 +888,7 @@
       });
 
       if (btn) {
-        btn.innerHTML =
-          '<div class="loader" style="width:20px;height:20px;border-width:3px;margin:auto;"></div>';
+          btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
       }
 
       logout();
