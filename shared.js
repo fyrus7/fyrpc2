@@ -426,26 +426,31 @@ if (size) {
         </div>
       </div>
 
-      <div style="
-        font-size:11px;
-        text-align:right;
-        opacity:0.7;
-        margin-top:6px;
-        cursor:pointer;
-      ">
-        dismiss
-      </div>
+<div class="dismiss-btn" style="
+  font-size:11px;
+  text-align:right;
+  opacity:0.7;
+  margin-top:6px;
+  cursor:pointer;
+">
+  dismiss
+</div>w
 
     </div>
   `;
 
   const card = document.getElementById("collectSuccessCard");
 
-  const dismiss = () => onDismiss?.();
+const dismiss = () => onDismiss?.();
 
-  card.onclick = dismiss;
+// remove global click (IMPORTANT)
+card.onclick = null;
 
-  card.querySelector("div:last-child").onclick = (e) => {
+// only dismiss button clickable
+const dismissBtn = card.querySelector(".dismiss-btn");
+
+if (dismissBtn) {
+  dismissBtn.onclick = (e) => {
     e.stopPropagation();
     dismiss();
   };
