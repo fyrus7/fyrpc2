@@ -477,6 +477,29 @@ function getSizeValue(size) {
   return 1000; // kids / numeric / unknown last
 }
 
+function normalizeSize(size) {
+  if (!size) return "";
+
+  let s = size.toUpperCase().replace(/\s+/g, "");
+
+  // convert 3XL → XXXL
+  const match = s.match(/^(\d+)XL$/);
+  if (match) {
+    const count = parseInt(match[1], 10);
+    return "X".repeat(count) + "L";
+  }
+
+  // convert 2XS → XXS
+  const matchXS = s.match(/^(\d+)XS$/);
+  if (matchXS) {
+    const count = parseInt(matchXS[1], 10);
+    return "X".repeat(count) + "S";
+  }
+
+  return s;
+}
+
+
 
 function togglePrint() {
   enablePrint = !enablePrint;
@@ -692,14 +715,15 @@ if (holdList) {
 
     // size aggregation ONLY
     if (size) {
-      sizeMap[size] = (sizeMap[size] || 0) + 1;
-    }
+  const normalized = normalizeSize(size);
+  sizeMap[normalized] = (sizeMap[normalized] || 0) + 1;
+}
   });
 }
 
 // clean sort (natural safe)
 const sizeSummary = Object.entries(sizeMap)
-  .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
+  .sort((a, b) => getSizeValue(a[0]) - getSizeValue(b[0]))
   .map(([k, v]) => `${k} (${v})`)
   .join(" / ");
 
