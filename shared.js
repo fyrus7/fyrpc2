@@ -685,24 +685,23 @@ if (holdList) {
     const bib = item.querySelector(".hold-bib")?.textContent?.trim() || "";
     const size = item.querySelector(".hold-size")?.textContent?.trim() || "";
 
+    // ONLY item list
     collectSummary.push(
       `${bib} ${size ? "(" + size + ")" : ""}`.trim()
     );
 
+    // size aggregation ONLY
     if (size) {
       sizeMap[size] = (sizeMap[size] || 0) + 1;
     }
   });
 }
 
-// sort size kecil → besar (natural sort safe)
+// clean sort (natural safe)
 const sizeSummary = Object.entries(sizeMap)
   .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }))
   .map(([k, v]) => `${k} (${v})`)
   .join(" / ");
-
-// attach summary last line (optional kalau UI kau guna)
-collectSummary.push(sizeSummary);
 
 // =========================
 // 4. CLOSE MODAL CLEAN
