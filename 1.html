@@ -880,26 +880,6 @@ body.dark-mode .dark-toggle-btn i {
 
   <link rel="stylesheet" href="Bootstrap/bootstrap-icons.min.css">
 
-  <script>
-window.__legacyGoogleScriptRun = {
-  withSuccessHandler: function(){ return this; },
-  withFailureHandler: function(){ return this; },
-  validateSession: function(){},
-  invalidateSession: function(){},
-  getLoginPage: function(){},
-  getMonitorPage: function(){},
-  getAdminPage: function(){},
-  getMobilePage: function(){},
-  getDesktopPage: function(){},
-  myCustomSearchFunction: function(){},
-  processMarkedRows: function(){},
-  processAndGetData: function(){},
-  showCollectedStatus: function(){},
-  getWalkinCategories: function(){},
-  submitWalkin: function(){}
-};
-</script>
-
 </head>
 <body>
   <div id="uiBlocker"></div>
@@ -1134,6 +1114,11 @@ window.__legacyGoogleScriptRun = {
             <button onclick="handleCancel()">CANCEL</button>
         </div>
 
+        <img id="walkinQR"
+             src="https://raw.githubusercontent.com/fyrus7/rpc_config/main/tngQR.png"
+             alt="QR Code"
+             style="width:230px;max-width:100%;display:block;margin:15px auto;" />
+
         <div id="walkinLoader" style="display:none; text-align:center; margin-top:15px;">
             <i class="bi bi-arrow-repeat spin" style="font-size:40px; color:#000;"></i>
         </div>
@@ -1146,69 +1131,6 @@ window.__legacyGoogleScriptRun = {
         <br>
         <button onclick="closeSuccessBox()">OK</button>
     </div>
-
-    <!-- WALKIN FORM --
-    <div id="walkinFormBox" class="walkin-box">
-        <span class="close" onclick="closeWalkinForm()">&times;</span>
-        <h3>Walk-in Registration</h3>
-
-        <div id="walkinFields">
-        <input type="tel" id="walkinIC" placeholder="No IC" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-        <input type="text" id="walkinName" placeholder="Name" style="text-transform: uppercase; margin-top: 10px;" />
-        <input type="tel" id="walkinContact" placeholder="Contact" style="margin-top: 10px;"
-               oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-
-        <div class="bib-chip-row">
-            <input type="text" id="walkinBib" placeholder="BIB No"
-                   oninput="this.value=this.value.toUpperCase().replace(/[^0-9ABCDEFGKS/() ]/g,'')" />
-            <input type="tel" id="walkinChip" placeholder="Chip No"
-                   oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
-        </div>
-
-        <input type="text" id="walkinEmer" placeholder="Emergency Name / Phone"
-               style="margin-top: 10px;" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9/ ]/g,'')" />
-
-        <div style="margin-top:20px;">
-           <label style="font-weight:600; display:block; margin-bottom:4px;">Category:</label>
-
-           <select id="walkinDistance" style="width:92%; padding:6px; border-radius:6px; border:1px solid #ccc; text-align:center; font-size:14px;">
-                <option>Loading...</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="walkinError" style="color:red; font-weight:bold; display:none; margin-top:5px;"></div>
-
-        <div id="confirmPreview" style="display:none; text-align:center; margin-bottom:15px;">
-            <div style="font-weight:bold; margin-bottom:8px;">REGISTER THIS RUNNER?</div>
-            <div>NAME: <b id="previewName"></b></div>
-            <div style="font-size:22px; margin-top:5px;">BIB: <b id="previewBib"></b></div>
-        </div>
-
-        <br>
-
-        <div class="btn-row">
-            <button id="walkinSubmitBtn" onclick="submitWalkinForm()">SUBMIT</button>
-            <button onclick="handleCancel()">CANCEL</button>
-        </div>
-
-        <img id="walkinQR"
-             src="https://raw.githubusercontent.com/fyrus7/rpc_config/main/tngQR.png"
-             alt="QR Code"
-             style="width:230px;max-width:100%;display:block;margin:15px auto;" />
-
-        <div id="walkinLoader" style="display:none; text-align:center; margin-top:15px;">
-            <i class="bi bi-arrow-repeat spin" style="font-size:40px; color:#000;"></i>
-        </div>
-    </div>
-
-    <div id="successBox" class="walkin-box" style="display:none;">
-        <h3>Successfull Registered</h3>
-        <p><b><span id="successBib" style="font-size:40px;"></span></b></p>
-        <p><b><span id="successName" style="font-size:20px;"></span></b></p>
-        <br>
-        <button onclick="closeSuccessBox()">OK</button>
-    </div> -->
 
 
 <div id="overlay">
