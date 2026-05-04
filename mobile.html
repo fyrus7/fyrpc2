@@ -116,26 +116,22 @@
   padding-left: 55px; /* 🔥 tambah ruang kiri bila ada hold */
 }
 
-/* HOLD button dalam input */
-#onHoldButton {
+#onHoldContainer {
   position: absolute;
   top: 50%;
   left: 10px;
   transform: translateY(-50%);
+}
 
+#onHoldButton {
   height: 26px;
   padding: 0 8px;
-
   font-size: 12px;
   border-radius: 12px;
-
   background: #fff3cd;
   border: 1px solid #ffe69c;
-
-  display: none;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
 }
 /*
         #footer {
@@ -1210,27 +1206,6 @@ window.__legacyGoogleScriptRun = {
     <i class="bi bi-person-badge"></i> <span id="userProfile"></span>
   </div>
 
-  <!-- ON HOLD button (hidden by default) -->
-<div id="onHoldContainer" style="display:none;">
-<button
-  type="button"
-  id="onHoldButton"
-  onclick="openHoldModal()"
-  style="
-    font-size:12px;
-    padding:4px 8px;
-    border-radius:12px;
-    background:#fff3cd;
-    border:1px solid #ffe69c;
-    cursor:pointer;
-    height: 24px;       /* pastikan sama tinggi dengan line-height text */
-    display: flex;
-    align-items: center;
-  "
->(0)</button>
-
-</div>
-
   <button id="logoutBtn" type="button" onclick="handleLogoutClick()" style="font-size: 18px; background-color: transparent; color:#455A64; border: none; cursor: pointer">
     <i class="bi bi-box-arrow-right" style="font-size: 22px"></i>
   </button>
@@ -1272,12 +1247,9 @@ window.__legacyGoogleScriptRun = {
     placeholder="Reg ID, MyKad or Name"
     onkeydown="handleEnter(event)">
 
-  <button
-    type="button"
-    id="onHoldButton"
-    onclick="openHoldModal()"
-    style="display:none;"
-  >(0)</button>
+  <div id="onHoldContainer" style="display:none;">
+    <button id="onHoldButton" onclick="openHoldModal()">(0)</button>
+  </div>
 
   <button type="button" id="searchButton" onclick="search()">
     <i class="bi bi-search"></i>
