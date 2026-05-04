@@ -204,12 +204,28 @@ function normalizeCollectRows(rows) {
 }
 
 function getSelectedPrintData(selectedCards) {
-  return Array.from(selectedCards).map(card => ({
-    valueBIB: card.querySelector(".bib-number")?.textContent?.trim() || "-",
-    valueSIZE: (card.querySelector(".bib-size")?.textContent || "")
-      .replace(/^\s*\/\s*/, "")
-      .trim()
-  }));
+  return Array.from(selectedCards).map(card => {
+    const text = card.textContent.trim();
+
+    let bib = "-";
+    let size = "";
+
+    // Try split "1234 / M"
+    const match = text.match(/(\S+)\s*\/\s*(\S+)/);
+
+    if (match) {
+      bib = match[1];
+      size = match[2];
+    } else {
+      // fallback kalau format lain
+      bib = text;
+    }
+
+    return {
+      valueBIB: bib,
+      valueSIZE: size
+    };
+  });
 }
 
 async function collectRows(markedRows) {
@@ -640,19 +656,26 @@ function removeSingleHold(rowId) {
 
 // NEW HOLD SIZE SORT HELPER
 function extractHoldData(container) {
-  const rows = container.querySelectorAll("[data-row]");
+  const rows = container.querySelectorAll(".hold-item, [data-row]");
 
   const result = [];
 
   rows.forEach(row => {
-    const bib = row.querySelector(".bib-number")?.textContent?.trim() || "-";
-    const sizeRaw = row.querySelector(".bib-size")?.textContent || "";
-    const size = sizeRaw.replace(/^\s*\/\s*/, "").trim();
+    const text = row.textContent.trim();
 
-    result.push({
-      bib,
-      size
-    });
+    let bib = "-";
+    let size = "";
+
+    const match = text.match(/(\S+)\s*\/\s*(\S+)/);
+
+    if (match) {
+      bib = match[1];
+      size = match[2];
+    } else {
+      bib = text;
+    }
+
+    result.push({ bib, size });
   });
 
   return result;
