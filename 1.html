@@ -1005,9 +1005,9 @@ body.dark-mode .dark-toggle-btn i {
   <button id="walkinButton" class="walkinButton" type="button" onclick="openWalkinForm()">
   <i class="bi bi-cart-plus" style="font-size: 20px;"></i>
 </button>
-  <button id="showCollected" class="showCollectedbutton" onclick="showCollectedStatus()">
+<!--  <button id="showCollected" class="showCollectedbutton" onclick="showCollectedStatus()">
     <i id="showCollectedIcon" class="bi bi-journal-text" style="font-size: 20px;"></i>
-  </button>
+  </button> -->
 
   <!-- ON HOLD button (hidden by default) -->
 <div id="onHoldContainer" style="display:none; position: relative; z-index: 2;">
@@ -1412,7 +1412,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function logoutFromMenu() {
   const btn = document.getElementById("logoutMenuBtn");
-  const dashboardBtn = document.getElementById("dashboardBtn");
+  const adminBtn = document.getElementById("adminBtn");
   const monitorBtn = document.getElementById("monitorBtn");
 
   [dashboardBtn, monitorBtn, btn].forEach(el => {
