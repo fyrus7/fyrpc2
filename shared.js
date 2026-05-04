@@ -659,12 +659,21 @@ async function collectHold() {
   }));
 
 // NEW LINE SIZE
-const holdListEl = document.querySelectorAll(".hold-item");
+const holdItems = Array.from(document.querySelectorAll(".hold-item"));
 
-const printData = Array.from(holdListEl).map(item => ({
-  valueBIB: item.querySelector(".hold-bib")?.textContent?.trim() || "",
-  valueSIZE: item.querySelector(".hold-size")?.textContent?.trim() || ""
+const items = holdItems.map(item => ({
+  name: item.querySelector(".hold-name")?.textContent?.trim() || "",
+  bib: item.querySelector(".hold-bib")?.textContent?.trim() || "",
+  size: item.querySelector(".hold-size")?.textContent?.trim() || ""
 }));
+
+const sizeCount = {};
+
+items.forEach(i => {
+  if (i.size) {
+    sizeCount[i.size] = (sizeCount[i.size] || 0) + 1;
+  }
+});
 
   showLoader();
 
@@ -699,20 +708,34 @@ if (holdList) {
     </div>
   `;
 
-  html += `
-    <div style="margin-top:10px; font-size:14px;">
-  `;
-
-  printData.forEach(item => {
+  // LIST DETAILS
+  items.forEach(i => {
     html += `
-      <div style="display:flex; justify-content:space-between; padding:4px 0;">
-        <div>${item.valueBIB}</div>
-        <div>${item.valueSIZE}</div>
+      <div style="margin-bottom:6px;">
+        <div style="font-weight:bold;">${i.name}</div>
+        <div style="display:flex; justify-content:space-between;">
+          <span>${i.bib}</span>
+          <span>${i.size}</span>
+        </div>
       </div>
     `;
   });
 
-  html += `</div>`;
+  // SIZE SUMMARY
+  let summary = Object.entries(sizeCount)
+    .map(([k, v]) => `${k} (${v})`)
+    .join(" / ");
+
+  html += `
+    <div style="
+      margin-top:10px;
+      padding-top:8px;
+      border-top:1px solid #ccc;
+      font-weight:bold;
+    ">
+      ${summary}
+    </div>
+  `;
 
   holdList.innerHTML = html;
 }
