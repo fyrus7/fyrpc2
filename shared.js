@@ -647,6 +647,7 @@ function removeSingleHold(rowId) {
 }
 
 
+
 async function collectHold() {
   const holdData = getHoldData();
   if (!holdData.rows.length) return;
@@ -661,93 +662,87 @@ async function collectHold() {
     userProfile
   }));
 
-  // 🔥 extract DOM data BEFORE anything changes
-  const items = Array.from(document.querySelectorAll(".hold-item")).map(item => ({
-    name: item.querySelector(".hold-name")?.textContent?.trim() || "",
-    bib: item.querySelector(".hold-bib")?.textContent?.trim() || "",
-    size: (item.querySelector(".hold-size")?.textContent || "").trim().toUpperCase()
-  }));
-
-  // 🔥 size sort order (auto logic)
-  const sizeOrder = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
-
-  const sizeCount = {};
-
-  items.forEach(i => {
-    if (!i.size) return;
-    sizeCount[i.size] = (sizeCount[i.size] || 0) + 1;
-  });
-
-  const sortedSizeSummary = Object.entries(sizeCount)
-    .sort((a, b) => {
-      const ai = sizeOrder.indexOf(a[0]) === -1 ? 999 : sizeOrder.indexOf(a[0]);
-      const bi = sizeOrder.indexOf(b[0]) === -1 ? 999 : sizeOrder.indexOf(b[0]);
-      return ai - bi;
-    })
-    .map(([k, v]) => `${k} (${v})`)
-    .join(" / ");
-
   showLoader();
 
   try {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
 
-    if (markSound) {
-      markSound.currentTime = 0;
-      markSound.play();
-    }
+    if (markSound) markSound.play();
 
-    // 🔥 modal UI only (NO REBUILD)
-    setDisplay("modalRemoveBtn", "none");
-    setDisplay("modalCollectBtn", "none");
-
+    // =========================
+    // 1. BUILD HOLD RESULT (LIKE NORMAL COLLECT)
+    // =========================
     const holdList = safeEl("holdList");
 
+    let holdItemsHTML = "";
+    let sizeMap = {};
+
     if (holdList) {
-      // SUCCESS HEADER (prepend only)
-      const success = document.createElement("div");
-      success.style.cssText = `
-        padding:10px;
-        border:1px solid green;
-        background:#e8f5e9;
-        color:#2e7d32;
-        font-weight:bold;
-        text-align:center;
-        margin-bottom:8px;
-      `;
-      success.innerText = "SUCCESSFULL";
+      const items = holdList.querySelectorAll(".hold-item");
 
-      holdList.prepend(success);
+      items.forEach(item => {
+        const bib = item.querySelector(".hold-bib")?.textContent?.trim() || "";
+        const size = item.querySelector(".hold-size")?.textContent?.trim() || "";
 
-      // SIZE FOOTER (append only)
-      const footer = document.createElement("div");
-      footer.style.cssText = `
-        margin-top:10px;
-        padding-top:8px;
-        border-top:1px solid #ccc;
-        font-weight:bold;
-      `;
-      footer.innerText = sortedSizeSummary;
+        holdItemsHTML += `
+          <div style="display:flex;justify-content:space-between;padding:2px 0;">
+            <div>${bib}</div>
+            <div>${size}</div>
+          </div>
+        `;
 
-      holdList.appendChild(footer);
+        if (size) {
+          sizeMap[size] = (sizeMap[size] || 0) + 1;
+        }
+      });
     }
 
-    const okBtn = safeEl("modalOkBtn");
+    const sizeSummary = Object.entries(sizeMap)
+      .sort((a, b) => a[0].localeCompare(b[0])) // ASC size sort
+      .map(([k, v]) => `${k} (${v})`)
+      .join(" / ");
 
-    if (okBtn) {
-      okBtn.style.display = "inline-block";
+    const finalHTML = `
+      <div style="padding:10px;border:1px solid green;background:#e8f5e9;color:#2e7d32;font-weight:bold;text-align:center;margin-bottom:8px;">
+        SUCCESSFULL
+      </div>
 
-      okBtn.onclick = function () {
-        setDisplay("holdModal", "none");
+      <div style="margin-bottom:8px;">
+        ${holdItemsHTML}
+      </div>
 
-        removeHold();
+      <div style="font-weight:bold;border-top:1px solid #ccc;padding-top:6px;">
+        ${sizeSummary}
+      </div>
+    `;
 
-        okBtn.style.display = "none";
-        setDisplay("modalRemoveBtn", "inline-block");
-        setDisplay("modalCollectBtn", "inline-block");
-      };
+    // =========================
+    // 2. CLOSE MODAL CLEAN
+    // =========================
+    const modal = safeEl("holdModal");
+    if (modal) modal.style.display = "none";
+
+    setDisplay("modalRemoveBtn", "inline-block");
+    setDisplay("modalCollectBtn", "inline-block");
+
+    // =========================
+    // 3. PUSH TO NORMAL RESULT CARD
+    // =========================
+    const result = safeEl("result");
+    if (result) {
+      result.innerHTML = finalHTML;
     }
+
+    // =========================
+    // 4. CLEAR HOLD DATA
+    // =========================
+    removeHold();
+
+    // =========================
+    // 5. REFRESH SUMMARY
+    // =========================
+    loadSummaryCard();
 
   } catch (err) {
     console.error(err);
@@ -756,6 +751,9 @@ async function collectHold() {
     hideLoader();
   }
 }
+
+
+
 
 
 // new hold data collect for size
