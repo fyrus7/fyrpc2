@@ -390,7 +390,7 @@ if (size) {
   resultContainer.innerHTML = `
     <div id="collectSuccessCard" style="
       padding:15px;
-      border:2px solid #28a745;
+      border:1px solid #28a745;
       background:#eaffea;
       color:#1b5e20;
       border-radius:10px;
@@ -418,7 +418,7 @@ if (size) {
         <div style="
           margin-top:10px;
           text-align:right;
-          font-size:12px;
+          font-size:13px;
           font-weight:700;
           opacity:0.85;
         ">
