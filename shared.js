@@ -456,6 +456,22 @@ function getSizeValue(size) {
 
   let s = size.toUpperCase().replace(/\s+/g, "");
 
+  // =========================
+  // 1. HANDLE NUMERIC FORMAT (3XL, 4XL, 2XS)
+  // =========================
+  const numXL = s.match(/^(\d+)XL$/);
+  if (numXL) {
+    return 7 + (parseInt(numXL[1], 10) - 1);
+  }
+
+  const numXS = s.match(/^(\d+)XS$/);
+  if (numXS) {
+    return 3 - parseInt(numXS[1], 10);
+  }
+
+  // =========================
+  // 2. STANDARD SIZES
+  // =========================
   const base = {
     "XXXS": 1,
     "XXS": 2,
@@ -470,21 +486,15 @@ function getSizeValue(size) {
     "XXXXXL": 11,
     "XXXXXXL": 12,
     "XXXXXXXL": 13,
-    "XXXXXXXXL: 14
+    "XXXXXXXXL": 14
   };
 
   if (base[s]) return base[s];
 
-  const match = s.match(/^(\d+)?(XS|XL)$/);
-  if (match) {
-    const num = parseInt(match[1] || "1", 10);
-    const type = match[2];
-
-    if (type === "XS") return 2 - num;
-    if (type === "XL") return 7 + (num - 1);
-  }
-
-  return 1000; // kids / numeric / unknown last
+  // =========================
+  // 3. FALLBACK (UNKNOWN SIZE)
+  // =========================
+  return 1000;
 }
 
 function normalizeSize(size) {
