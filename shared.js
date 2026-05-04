@@ -204,28 +204,10 @@ function normalizeCollectRows(rows) {
 }
 
 function getSelectedPrintData(selectedCards) {
-  return Array.from(selectedCards).map(card => {
-    const text = card.textContent.trim();
-
-    let bib = "-";
-    let size = "";
-
-    // Try split "1234 / M"
-    const match = text.match(/(\S+)\s*\/\s*(\S+)/);
-
-    if (match) {
-      bib = match[1];
-      size = match[2];
-    } else {
-      // fallback kalau format lain
-      bib = text;
-    }
-
-    return {
-      valueBIB: bib,
-      valueSIZE: size
-    };
-  });
+  return Array.from(selectedCards).map(card => ({
+    valueBIB: card.querySelector(".bib-number")?.textContent?.trim() || "",
+    valueSIZE: (card.querySelector(".bib-size")?.textContent || "").replace(/^\s*\/\s*/, "").trim()
+  }));
 }
 
 async function collectRows(markedRows) {
@@ -285,6 +267,8 @@ async function collect() {
   }));
 
   if (!markedRows.length) return;
+
+  const printData = getSelectedPrintData(selected);
 
   setAllButtonsDisabled(true);
   if (collectButton) collectButton.value = "Collecting...";
@@ -653,35 +637,6 @@ function removeSingleHold(rowId) {
   syncCollectButton();
 }
 
-
-// NEW HOLD SIZE SORT HELPER
-function extractHoldData(container) {
-  const rows = container.querySelectorAll(".hold-item, [data-row]");
-
-  const result = [];
-
-  rows.forEach(row => {
-    const text = row.textContent.trim();
-
-    let bib = "-";
-    let size = "";
-
-    const match = text.match(/(\S+)\s*\/\s*(\S+)/);
-
-    if (match) {
-      bib = match[1];
-      size = match[2];
-    } else {
-      bib = text;
-    }
-
-    result.push({ bib, size });
-  });
-
-  return result;
-}
-// HELPER END
-
 async function collectHold() {
   const holdData = getHoldData();
   if (!holdData.rows.length) return;
@@ -700,27 +655,28 @@ async function collectHold() {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
     if (markSound) markSound.play();
-// NEE HOLD SIZE EXTRACT
-    const holdListEl = safeEl("holdList");    
-    let dataList = [];    
-    if (holdListEl) {
-      const extracted = extractHoldData(holdListEl);
-      
-      dataList = extracted.map(d =>
-        `${d.bib} ${d.size ? "(" + d.size + ")" : ""}`
-      );
+    
+
+    setDisplay("modalRemoveBtn", "none");
+    setDisplay("modalCollectBtn", "none");
+    const holdList = safeEl("holdList");
+    if (holdList) {
+      holdList.innerHTML = `<div style="padding:10px;border:1px solid green;background:#e8f5e9;color:#2e7d32;font-weight:bold;text-align:center;margin-bottom:8px;">SUCCESSFULL</div>${holdList.innerHTML}`;
     }
-   // EXTRACT END
 
-    setDisplay("holdModal", "none");
-    
-    showCollectSuccessCard(dataList, () => {
-      removeHold();
-      loadSummaryCard();
-    });
-    // extract end
+    const okBtn = safeEl("modalOkBtn");
+    if (okBtn) {
+      okBtn.style.display = "inline-block";
+      okBtn.onclick = function() {
+        setDisplay("holdModal", "none");
+        removeHold();
+        okBtn.style.display = "none";
+        setDisplay("modalRemoveBtn", "inline-block");
+        setDisplay("modalCollectBtn", "inline-block");
 
-    
+        loadSummaryCard();
+      };
+    }
   } catch (err) {
     console.error(err);
     alert("Collect hold failed");
