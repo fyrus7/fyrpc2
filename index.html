@@ -240,7 +240,7 @@ function isMobileDevice() {
 }
 
 function getDashboardPage() {
-  return isMobileDevice() ? "mobile.html" : "desktop.html";
+  return isMobileDevice() ? "0.html" : "1.html";
 }
 
 // 🚀 ON LOAD
@@ -598,7 +598,7 @@ function logout() {
     })
     .finally(() => {
       localStorage.clear();
-      window.location.replace("login.html");
+      window.location.replace("index.html");
     });
 }
 </script>
