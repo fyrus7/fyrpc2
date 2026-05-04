@@ -590,24 +590,16 @@ function holdSelection() {
 
 function updateOnHoldButton() {
   const holdData = getHoldData();
-
+  const container = safeEl("onHoldContainer");
   const btn = safeEl("onHoldButton");
-  const input = safeEl("searchTerm");
+  if (!container || !btn) return;
 
-  if (!btn || !input) return;
-
-  const count = holdData.rows.length;
-
-  if (count > 0) {
-    btn.style.display = "flex";
-    btn.innerText = `(${count})`;
-
-    input.classList.add("with-hold"); // 🔥 shift input
-  } else {
-    btn.style.display = "none";
-
-    input.classList.remove("with-hold"); // 🔥 reset input
+  if (!holdData.rows.length) {
+    container.style.display = "none";
+    return;
   }
+  btn.innerText = `${holdData.rows.length}`;
+  container.style.display = "block";
 }
 
 function syncCollectButton() {
