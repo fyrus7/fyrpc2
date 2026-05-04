@@ -350,9 +350,14 @@ function showCollectSuccessCard(dataList, onDismiss) {
     const s = size.toLowerCase();
 
     // COUNT SIZE (ignore invalid)
-    if (size && !["na", "n/a", "nil", "-"].includes(s)) {
-      sizeMap[size] = (sizeMap[size] || 0) + 1;
-    }
+if (size) {
+  const raw = size.toLowerCase().trim();
+
+  if (!["na", "n/a", "nil", "-"].includes(raw)) {
+    const normalized = normalizeSize(size);
+    sizeMap[normalized] = (sizeMap[normalized] || 0) + 1;
+  }
+}
 
     return `
       <div style="
@@ -460,7 +465,12 @@ function getSizeValue(size) {
     "L": 6,
     "XL": 7,
     "XXL": 8,
-    "XXXL": 9
+    "XXXL": 9,
+    "XXXXL": 10,
+    "XXXXXL": 11,
+    "XXXXXXL": 12,
+    "XXXXXXXL": 13,
+    "XXXXXXXXL: 14
   };
 
   if (base[s]) return base[s];
@@ -482,20 +492,19 @@ function normalizeSize(size) {
 
   let s = size.toUpperCase().replace(/\s+/g, "");
 
-  // convert 3XL → XXXL
-  const match = s.match(/^(\d+)XL$/);
-  if (match) {
-    const count = parseInt(match[1], 10);
-    return "X".repeat(count) + "L";
+  // XXXL → 3XL
+  const xxlMatch = s.match(/^(X+)L$/);
+  if (xxlMatch) {
+    return xxlMatch[1].length + "XL";
   }
 
-  // convert 2XS → XXS
-  const matchXS = s.match(/^(\d+)XS$/);
-  if (matchXS) {
-    const count = parseInt(matchXS[1], 10);
-    return "X".repeat(count) + "S";
+  // XXS → 2XS
+  const xxsMatch = s.match(/^(X+)S$/);
+  if (xxsMatch) {
+    return xxsMatch[1].length + "XS";
   }
 
+  // already numeric (3XL, 2XS)
   return s;
 }
 
