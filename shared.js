@@ -742,7 +742,7 @@ async function collectHold() {
     // =========================
     // 5. REFRESH SUMMARY
     // =========================
-    loadSummaryCard();
+    showCollectSuccessCard();
 
   } catch (err) {
     console.error(err);
