@@ -203,10 +203,19 @@ function normalizeCollectRows(rows) {
   }));
 }
 
+// GET PRINT DATA FROM COLLECT FOR SIZE
 function getSelectedPrintData(selectedCards) {
   return Array.from(selectedCards).map(card => ({
     valueBIB: card.querySelector(".bib-number")?.textContent?.trim() || "",
     valueSIZE: (card.querySelector(".bib-size")?.textContent || "").replace(/^\s*\/\s*/, "").trim()
+  }));
+}
+
+// GET PRINT DATA FROM COLLECTHOLD FOR SIZE
+function getHoldPrintData(container) {
+  return Array.from(container.querySelectorAll(".hold-item")).map(item => ({
+    valueBIB: item.querySelector(".hold-bib")?.textContent?.trim() || "",
+    valueSIZE: item.querySelector(".hold-size")?.textContent?.trim() || ""
   }));
 }
 
@@ -655,28 +664,22 @@ async function collectHold() {
     const res = await collectRows(markedRows);
     if (!res.success && res.error) throw new Error(res.error);
     if (markSound) markSound.play();
-    
 
-    setDisplay("modalRemoveBtn", "none");
-    setDisplay("modalCollectBtn", "none");
+    // ✅ ambil data dari modal
     const holdList = safeEl("holdList");
-    if (holdList) {
-      holdList.innerHTML = `<div style="padding:10px;border:1px solid green;background:#e8f5e9;color:#2e7d32;font-weight:bold;text-align:center;margin-bottom:8px;">SUCCESSFULL</div>${holdList.innerHTML}`;
-    }
+    const printData = getHoldPrintData(holdList);
+    
+    const collectSummary = printData.map(item =>
+      `${item.valueBIB} ${item.valueSIZE ? "(" + item.valueSIZE + ")" : ""}`.trim()
+    );
+    
+    // ✅ terus guna result card (BUANG cara lama)
+    showCollectSuccessCard(collectSummary, () => {
+      setDisplay("holdModal", "none");
+      removeHold();
+      loadSummaryCard();
+    });
 
-    const okBtn = safeEl("modalOkBtn");
-    if (okBtn) {
-      okBtn.style.display = "inline-block";
-      okBtn.onclick = function() {
-        setDisplay("holdModal", "none");
-        removeHold();
-        okBtn.style.display = "none";
-        setDisplay("modalRemoveBtn", "inline-block");
-        setDisplay("modalCollectBtn", "inline-block");
-
-        loadSummaryCard();
-      };
-    }
   } catch (err) {
     console.error(err);
     alert("Collect hold failed");
