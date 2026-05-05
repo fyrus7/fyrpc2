@@ -28,18 +28,24 @@
       font-family: Arial, sans-serif;
       background: #f7f8fa;
       color: #222;
+      padding-top: 40px;
     }
 
-  .top-header {
+.top-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+
   background: linear-gradient(135deg, #6f42c1, #e83e8c);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 30px !important;
+  height: 30px;
   padding: 0 12px;
   color: white;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border-radius: 6px;
 }
 
     .top-header #profileNameDisplay,
