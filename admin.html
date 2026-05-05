@@ -30,6 +30,28 @@
       color: #222;
     }
 
+  .top-header {
+  background: linear-gradient(135deg, #6f42c1, #e83e8c);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 30px !important;
+  padding: 0 12px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 6px;
+}
+
+    .top-header #profileNameDisplay,
+    #profileNameDisplay,
+    #logoutBtn {
+      color: white !important;
+    }
+
+    .top-header #profileNameDisplay {
+      font-size: 14px;
+    }
+
     table {
       border-collapse: collapse;
       width: 100%;
@@ -71,27 +93,6 @@
       background-color: #c12e2a;
     }
 
-.top-header {
-  background: linear-gradient(135deg, #6f42c1, #e83e8c);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 30px !important;
-  padding: 0 12px;
-  color: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border-radius: 6px;
-}
-
-    .top-header #profileNameDisplay,
-    #profileNameDisplay,
-    #logoutBtn {
-      color: white !important;
-    }
-
-    .top-header #profileNameDisplay {
-      font-size: 14px;
-    }
 
     .spin {
   animation: spin 1s linear infinite;
