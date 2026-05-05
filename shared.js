@@ -508,22 +508,36 @@ function normalizeSize(size) {
 
   let s = size.toUpperCase().replace(/\s+/g, "");
 
+  // =========================
+  // KEEP XS & XL (NO NUMBER)
+  // =========================
+  if (s === "XS" || s === "XL") return s;
+
+  // =========================
   // XXXL → 3XL
+  // =========================
   const xxlMatch = s.match(/^(X+)L$/);
   if (xxlMatch) {
-    return xxlMatch[1].length + "XL";
+    const count = xxlMatch[1].length;
+
+    if (count === 1) return "XL"; // prevent 1XL
+    return count + "XL";
   }
 
+  // =========================
   // XXS → 2XS
+  // =========================
   const xxsMatch = s.match(/^(X+)S$/);
   if (xxsMatch) {
-    return xxsMatch[1].length + "XS";
+    const count = xxsMatch[1].length;
+
+    if (count === 1) return "XS"; // prevent 1XS
+    return count + "XS";
   }
 
   // already numeric (3XL, 2XS)
   return s;
 }
-
 
 
 function togglePrint() {
